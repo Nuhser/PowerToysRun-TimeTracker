@@ -1,0 +1,36 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net8.0-windows</TargetFramework>
+        <Nullable>enable</Nullable>
+        <UseWPF>true</UseWPF>
+        <AssemblyName>Community.PowerToys.Run.Plugin.$(MSBuildProjectName)</AssemblyName>
+        <Platforms>AnyCPU;x64;ARM64</Platforms>
+        <Version>0.0.0</Version>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <Reference Include="Wox.Plugin">
+            <HintPath>libs\Wox.Plugin.dll</HintPath>
+        </Reference>
+        <Reference Include="Wox.Infrastructure">
+            <HintPath>libs\Wox.Infrastructure.dll</HintPath>
+        </Reference>
+        <Reference Include="PowerToys.Common.UI">
+            <HintPath>libs\PowerToys.Common.UI.dll</HintPath>
+        </Reference>
+        <Reference Include="PowerToys.ManagedCommon">
+            <HintPath>libs\PowerToys.ManagedCommon.dll</HintPath>
+        </Reference>
+        <Reference Include="PowerToys.Settings.UI.Lib">
+            <HintPath>libs\PowerToys.Settings.UI.Lib.dll</HintPath>
+        </Reference>
+    </ItemGroup>
+
+    <ItemGroup>
+        <None Update="plugin.json">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+    </ItemGroup>
+
+</Project>
