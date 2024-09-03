@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using Microsoft.PowerToys.Settings.UI.Library;
 
@@ -6,6 +8,13 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
 {
     public class SettingsManager
     {
+        public static readonly string PLUGIN_PATH =
+            Directory.Exists(@".\RunPlugins\TimeTracker")
+            ? @"RunPlugins\TimeTracker"
+            : Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) + @"\Microsoft\PowerToys\PowerToys Run\Plugins\TimeTracker";
+
+        public static readonly string SAVES_NAME = "data.json";
+
         public static readonly string LIGHT_ICON_PATH = "images/light/";
         public static readonly string DARK_ICON_PATH = "images/dark/";
         public string IconPath { get; set; } = LIGHT_ICON_PATH;
@@ -114,10 +123,5 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
                 option.PlaceholderText = PlaceHolder;
             }
         }
-    }
-
-    public class SettingsManager
-    {
-
     }
 }
