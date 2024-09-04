@@ -81,7 +81,7 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
                         "|" +
                         task.Name +
                         "|" +
-                        (task.Start?.ToString("HH:mm") ?? "") +
+                        (task.Start?.ToString("HH:mm") ?? " ") +
                         "|" +
                         (task.End?.ToString("HH:mm") ?? " ") +
                         "|" +
@@ -95,7 +95,7 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
                     {
                         outputFile.WriteLine(
                         "||" +
-                        (child.Start?.ToString("HH:mm") ?? "") +
+                            (child.Start?.ToString("HH:mm") ?? " ") +
                         "|" +
                         (child.End?.ToString("HH:mm") ?? " ") +
                         "|" +
