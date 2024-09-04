@@ -129,8 +129,20 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
 
         private void CreateAndOpenTimeTrackerSummary()
         {
-            string exportFile = ExportManager.ExportToMarkdown(trackerEntries);
+            string? exportFile = null;
 
+            switch (settingsManager.SummaryExportTypeSetting.SelectedOption)
+            {
+                case (int)SettingsManager.SummaryExportType.CSV:
+                    exportFile = ExportManager.ExportToCSV(trackerEntries);
+                    break;
+                case (int)SettingsManager.SummaryExportType.Markdown:
+                    exportFile = ExportManager.ExportToMarkdown(trackerEntries);
+                    break;
+            }
+
+            if (exportFile != null)
+            {
             Process.Start(
                     new ProcessStartInfo
                     {
@@ -138,6 +150,7 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
                         UseShellExecute = true
                     }
                 );
+            }
         }
 
         /*

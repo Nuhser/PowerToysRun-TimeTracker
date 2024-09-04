@@ -19,6 +19,28 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
         public static readonly string DARK_ICON_PATH = "images/dark/";
         public string IconPath { get; set; } = LIGHT_ICON_PATH;
 
+        public enum SummaryExportType
+        {
+            CSV,
+            Markdown,
+            HTML
+        }
+
+        public DropdownSetting SummaryExportTypeSetting = new()
+        {
+            Key = "summary_export_type",
+            Label = "Summary Export Type",
+            Description = "The file type to use when creating a time tracker summary.",
+            SelectableOptions = Enum.GetNames(typeof(SummaryExportType))
+        };
+
+        public List<Setting> GetSettings()
+        {
+            return [
+                SummaryExportTypeSetting
+            ];
+        }
+
         public List<PluginAdditionalOption> GetOptions()
         {
             return GetSettings().Select<Setting, PluginAdditionalOption>(s => s.GetAsOption()).ToList();
@@ -38,11 +60,6 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
                     .ToList()
                     .ForEach(setting => setting.SetValue(option));
             }
-        }
-
-        public List<Setting> GetSettings()
-        {
-            return [];
         }
 
         /* HELPER CLASSES */
@@ -121,6 +138,31 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
             {
                 option.TextValue = Value;
                 option.PlaceholderText = PlaceHolder;
+            }
+        }
+
+        public class DropdownSetting : Setting
+        {
+            public override PluginAdditionalOption.AdditionalOptionType OptionType { get; } = PluginAdditionalOption.AdditionalOptionType.Combobox;
+            public int SelectedOption { get; set; }
+            public required string[] SelectableOptions { get; set; }
+
+            public override void SetValue(PluginAdditionalOption option)
+            {
+                SelectedOption = option.ComboBoxValue;
+            }
+
+            protected override void AddTypeSpecificOptionProperties(PluginAdditionalOption option)
+            {
+                option.ComboBoxValue = SelectedOption;
+
+                List<KeyValuePair<string, string>> items = [];
+                for (var i = 0; i < SelectableOptions.Length; i++)
+                {
+                    items.Add(new(SelectableOptions[i], i.ToString()));
+                }
+
+                option.ComboBoxItems = items;
             }
         }
     }
