@@ -131,7 +131,7 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
         {
             string exportFile = ExportManager.ExportToMarkdown(trackerEntries);
 
-                Process.Start(
+            Process.Start(
                     new ProcessStartInfo
                     {
                         FileName = exportFile,

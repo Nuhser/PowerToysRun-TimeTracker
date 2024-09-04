@@ -94,16 +94,60 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
                     foreach (var child in task.ChildEntries)
                     {
                         outputFile.WriteLine(
-                        "||" +
+                            "||" +
                             (child.Start?.ToString("HH:mm") ?? " ") +
-                        "|" +
-                        (child.End?.ToString("HH:mm") ?? " ") +
-                        "|" +
-                        (child.Duration != null
-                            ? (child.Duration?.Hours + "h " + child.Duration?.Minutes + "m " + child.Duration?.Seconds + "s")
-                            : " ") +
-                        "|"
-                    );
+                            "|" +
+                            (child.End?.ToString("HH:mm") ?? " ") +
+                            "|" +
+                            (child.Duration != null
+                                ? (child.Duration?.Hours + "h " + child.Duration?.Minutes + "m " + child.Duration?.Seconds + "s")
+                                : " ") +
+                            "|"
+                        );
+                    }
+                }
+            }
+
+            return exportFileName;
+        }
+
+        public static string ExportToCSV(
+            Dictionary<DateOnly, List<TimeTracker.TrackerEntry>>? trackerEntries
+        )
+        {
+            string exportFileName = Path.Combine(SettingsManager.PLUGIN_PATH, @"summary.csv");
+
+            using StreamWriter outputFile = new(exportFileName);
+
+            outputFile.WriteLine("Date,Name,Start,End,Duration");
+
+            foreach (var day in GetDateToSummaryEntriesDict(trackerEntries))
+            {
+                foreach (var task in day.Value)
+                {
+                    outputFile.WriteLine(string.Join(",", [
+                        day.Key.ToString("dd.MM.yyyy"),
+                        task.Name,
+                        (task.Start?.ToString("HH:mm") ?? ""),
+                        (task.End?.ToString("HH:mm") ?? ""),
+                        (task.Duration != null
+                            ? (task.Duration?.Hours + "h " + task.Duration?.Minutes + "m " + task.Duration?.Seconds + "s")
+                            : ""
+                        )
+                    ]));
+
+                    foreach (var child in task.ChildEntries)
+                    {
+                        outputFile.WriteLine(string.Join(",", [
+                            "",
+                            "",
+                            (child.Start?.ToString("HH:mm") ?? ""),
+                            (child.End?.ToString("HH:mm") ?? ""),
+                            (child.Duration != null
+                                ? (child.Duration?.Hours + "h " + child.Duration?.Minutes + "m " + child.Duration?.Seconds + "s")
+                                : ""
+                            )
+                        ]));
                     }
                 }
             }
