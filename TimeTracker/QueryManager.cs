@@ -35,7 +35,7 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
                         GetNumberOfCurrentRunningTasks() > 1
                             ? "Stops all currently running tasks."
                             : "Stops the currently running task '" + GetRunningTasksName() + "'.",
-                    IconName = "",
+                    IconName = "stop.png",
                     Action = (_) => AddEndTimeToAllRunningTasks()
                 },
                 new() {
@@ -48,17 +48,19 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
                                 ? "Stops currently running tasks and starts a new one named '" + queryString + "'."
                                 : "Stops the currently running task '" + GetRunningTasksName() + "' and starts a new one named '" + queryString + "'."
                             : "Starts a new task named '" + queryString + "'.",
-                    IconName = "",
+                    IconName = "start.png",
                     Action = (queryString) => {
                         AddEndTimeToAllRunningTasks();
                         AddNewTrackerEntry(queryString);
                     }
                 },
                 new() {
-                    AdditionalChecks = string.IsNullOrWhiteSpace,
+                    AdditionalChecks = (queryString) =>
+                        string.IsNullOrWhiteSpace(queryString) &&
+                        trackerEntries?.Count > 0,
                     Title = "Show Time Tracker Summary",
                     Description = "",
-                    IconName = "",
+                    IconName = "summary.png",
                     Action = (_) => CreateAndOpenTimeTrackerSummary()
                 }
             ];

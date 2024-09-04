@@ -15,8 +15,8 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
 
         public static readonly string SAVES_NAME = "data.json";
 
-        public static readonly string LIGHT_ICON_PATH = "images/light/";
-        public static readonly string DARK_ICON_PATH = "images/dark/";
+        public static readonly string LIGHT_ICON_PATH = "icons/light/";
+        public static readonly string DARK_ICON_PATH = "icons/dark/";
         public string IconPath { get; set; } = LIGHT_ICON_PATH;
 
         public enum SummaryExportType

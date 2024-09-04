@@ -8,6 +8,6 @@
     "Language": "csharp",
     "Website": "https://github.com/Nuhser/PowerToysRun-TimeTracker",
     "ExecuteFileName": "Community.PowerToys.Run.Plugin.TimeTracker.dll",
-    "IcoPathDark": "images\\dark\\weclapp.png",
-    "IcoPathLight": "images\\light\\weclapp.png"
+    "IcoPathDark": "icons\\dark\\logo.png",
+    "IcoPathLight": "icons\\light\\logo.png"
 }

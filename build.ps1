@@ -47,7 +47,7 @@ if ($?) {
         Copy-Item $source"\plugin.json" $destination"\plugin.json"
         Copy-Item $source"\Community.PowerToys.Run.Plugin.TimeTracker.dll" $destination"\Community.PowerToys.Run.Plugin.TimeTracker.dll"
         # Copy-Item $source"\util" $destination"\util" -Recurse
-        # Copy-Item $source"\images" $destination"\images" -Recurse
+        Copy-Item $source"\icons" $destination"\icons" -Recurse
         Copy-Item ".\README.md" $destination"\README.md"
 
         Write-Host "`nCopying data into plugins folder..."
