@@ -23,7 +23,7 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
         {
             CSV,
             Markdown,
-            HTML
+            // HTML
         }
 
         public DropdownSetting SummaryExportTypeSetting = new()
