@@ -63,21 +63,21 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
         {
             string exportFileName = Path.Combine(SettingsManager.PLUGIN_PATH, @"summary.md");
 
-            using StreamWriter outputFile = new(exportFileName);
+            using StreamWriter exportFile = new(exportFileName);
 
-            outputFile.WriteLine("# Time Tracker Summary");
-            outputFile.WriteLine();
+            exportFile.WriteLine("# Time Tracker Summary");
+            exportFile.WriteLine();
 
             foreach (var day in GetDateToSummaryEntriesDict(trackerEntries))
             {
-                outputFile.WriteLine("## " + day.Key.ToString("dddd, d. MMMM yyyy"));
-                outputFile.WriteLine();
-                outputFile.WriteLine("|Name|Start|End|Duration|");
-                outputFile.WriteLine("|-----|-----|-----|-----|");
+                exportFile.WriteLine("## " + day.Key.ToString("dddd, d. MMMM yyyy"));
+                exportFile.WriteLine();
+                exportFile.WriteLine("|Name|Start|End|Duration|");
+                exportFile.WriteLine("|-----|-----|-----|-----|");
 
                 foreach (var task in day.Value)
                 {
-                    outputFile.WriteLine(
+                    exportFile.WriteLine(
                         "|" +
                         task.Name +
                         "|" +
@@ -93,7 +93,7 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
 
                     foreach (var child in task.ChildEntries)
                     {
-                        outputFile.WriteLine(
+                        exportFile.WriteLine(
                             "||" +
                             (child.Start?.ToString("HH:mm") ?? " ") +
                             "|" +
@@ -117,15 +117,15 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
         {
             string exportFileName = Path.Combine(SettingsManager.PLUGIN_PATH, @"summary.csv");
 
-            using StreamWriter outputFile = new(exportFileName);
+            using StreamWriter exportFile = new(exportFileName);
 
-            outputFile.WriteLine("Date,Name,Start,End,Duration");
+            exportFile.WriteLine("Date,Name,Start,End,Duration");
 
             foreach (var day in GetDateToSummaryEntriesDict(trackerEntries))
             {
                 foreach (var task in day.Value)
                 {
-                    outputFile.WriteLine(string.Join(",", [
+                    exportFile.WriteLine(string.Join(",", [
                         day.Key.ToString("dd.MM.yyyy"),
                         task.Name,
                         (task.Start?.ToString("HH:mm") ?? ""),
@@ -138,7 +138,7 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
 
                     foreach (var child in task.ChildEntries)
                     {
-                        outputFile.WriteLine(string.Join(",", [
+                        exportFile.WriteLine(string.Join(",", [
                             "",
                             "",
                             (child.Start?.ToString("HH:mm") ?? ""),
