@@ -23,7 +23,7 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
         {
             CSV,
             Markdown,
-            // HTML
+            HTML
         }
 
         public DropdownSetting SummaryExportTypeSetting = new()
@@ -31,6 +31,7 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
             Key = "summary_export_type",
             Label = "Summary Export Type",
             Description = "The file type to use when creating a time tracker summary.",
+            SelectedOption = (int)SummaryExportType.HTML,
             SelectableOptions = Enum.GetNames(typeof(SummaryExportType))
         };
 
