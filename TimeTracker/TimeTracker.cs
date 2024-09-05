@@ -86,9 +86,15 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
         private void UpdateIconPath(Theme theme)
         {
             if (theme is Theme.Light or Theme.HighContrastWhite)
+            {
                 _settingsManager.IconPath = SettingsManager.LIGHT_ICON_PATH;
+                _settingsManager.HtmlExportTheme = "light";
+            }
             else
+            {
                 _settingsManager.IconPath = SettingsManager.DARK_ICON_PATH;
+                _settingsManager.HtmlExportTheme = "dark";
+            }
         }
 
         public class TrackerEntry(string name)

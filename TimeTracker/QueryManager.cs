@@ -142,7 +142,7 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
                     exportFile = ExportManager.ExportToMarkdown(trackerEntries);
                     break;
                 case (int)SettingsManager.SummaryExportType.HTML:
-                    exportFile = ExportManager.ExportToHTML(trackerEntries);
+                    exportFile = ExportManager.ExportToHTML(trackerEntries, settingsManager.HtmlExportTheme);
                     break;
             }
 

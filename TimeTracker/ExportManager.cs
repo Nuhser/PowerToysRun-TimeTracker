@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.IO;
 using System.Linq;
 
@@ -172,21 +171,27 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
         }
 
         public static string ExportToHTML(
-            Dictionary<DateOnly, List<TimeTracker.TrackerEntry>>? trackerEntries
+            Dictionary<DateOnly, List<TimeTracker.TrackerEntry>>? trackerEntries,
+            string theme
         )
         {
             string exportFileName = Path.Combine(SettingsManager.PLUGIN_PATH, @"summary.html");
             using StreamWriter exportFile = new(exportFileName);
 
-            exportFile.WriteLine(FillAndReturnSummaryTemplate(GetDateToSummaryEntriesDict(trackerEntries)));
+            exportFile.WriteLine(FillAndReturnSummaryTemplate(GetDateToSummaryEntriesDict(trackerEntries), theme));
 
             return exportFileName;
         }
 
-        private static string FillAndReturnSummaryTemplate(Dictionary<DateOnly, List<SummaryEntry>> summaryEntries)
+        private static string FillAndReturnSummaryTemplate(Dictionary<DateOnly, List<SummaryEntry>> summaryEntries, string theme)
         {
             const string YEAR_BUTTON_PLACEHOLDER = "%%YEAR-BUTTON-TEMPLATE%%";
             const string YEAR_PLACEHOLDER = "%%YEAR-TEMPLATE%%";
+            const string THEME_PLACEHOLDER = "%%THEME%%";
+            const string COLOR_THEME_PLACEHOLDER = "%%COLOR-THEME%%";
+
+            const string DARK_COLORS = @"color: #dee2e6;
+            background: #46484A;";
 
             HashSet<string> years = GetYearsFromDateList([.. summaryEntries.Keys]);
 
@@ -205,8 +210,11 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
                     case YEAR_PLACEHOLDER:
                         years.ToList().ForEach(year => exportLines += FillAndReturnYearTemplate(summaryEntries, year, year == years.Last()));
                         break;
+                    case COLOR_THEME_PLACEHOLDER:
+                        exportLines += theme == "dark" ? DARK_COLORS : "";
+                        break;
                     default:
-                        exportLines += line;
+                        exportLines += line.Replace(THEME_PLACEHOLDER, theme);
                         break;
                 }
             }

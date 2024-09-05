@@ -19,6 +19,8 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
         public static readonly string DARK_ICON_PATH = "icons/dark/";
         public string IconPath { get; set; } = LIGHT_ICON_PATH;
 
+        public string HtmlExportTheme { get; set; } = "light";
+
         public enum SummaryExportType
         {
             CSV,
