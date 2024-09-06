@@ -72,6 +72,14 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
             return dates.Where(date => date.ToString("yyyy") == year).Where(date => date.ToString("MMMM") == month).ToHashSet();
         }
 
+        private static string GetDurationAsString(TimeSpan? duration)
+        {
+            if (duration == null)
+                return "";
+
+            return duration?.Hours + "h " + duration?.Minutes + "m " + duration?.Seconds + "s";
+        }
+
         public static string ExportToMarkdown(
             Dictionary<DateOnly, List<TimeTracker.TrackerEntry>>? trackerEntries
         )
@@ -100,9 +108,7 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
                         "|" +
                         (task.End?.ToString("HH:mm") ?? " ") +
                         "|" +
-                        (task.Duration != null
-                            ? (task.Duration?.Hours + "h " + task.Duration?.Minutes + "m " + task.Duration?.Seconds + "s")
-                            : " ") +
+                        GetDurationAsString(task.Duration) +
                         "|"
                     );
 
@@ -114,13 +120,13 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
                             "|" +
                             (child.End?.ToString("HH:mm") ?? " ") +
                             "|" +
-                            (child.Duration != null
-                                ? (child.Duration?.Hours + "h " + child.Duration?.Minutes + "m " + child.Duration?.Seconds + "s")
-                                : " ") +
+                            GetDurationAsString(child.Duration) +
                             "|"
                         );
                     }
                 }
+
+                exportFile.WriteLine();
             }
 
             return exportFileName;
@@ -145,10 +151,7 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
                         task.Name,
                         (task.Start?.ToString("HH:mm") ?? ""),
                         (task.End?.ToString("HH:mm") ?? ""),
-                        (task.Duration != null
-                            ? (task.Duration?.Hours + "h " + task.Duration?.Minutes + "m " + task.Duration?.Seconds + "s")
-                            : ""
-                        )
+                        GetDurationAsString(task.Duration)
                     ]));
 
                     foreach (var child in task.ChildEntries)
@@ -158,10 +161,7 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
                             "",
                             (child.Start?.ToString("HH:mm") ?? ""),
                             (child.End?.ToString("HH:mm") ?? ""),
-                            (child.Duration != null
-                                ? (child.Duration?.Hours + "h " + child.Duration?.Minutes + "m " + child.Duration?.Seconds + "s")
-                                : ""
-                            )
+                            GetDurationAsString(child.Duration)
                         ]));
                     }
                 }
@@ -337,6 +337,8 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
             const string DATE_NAME_PLACEHOLDER = "%%DATE-NAME%%";
             const string TABLE_ENTRIES_PLACEHOLDER = "%%TABLE-ENTRIES%%";
 
+            TimeSpan? totalDuration = summaryEntries.Select(entry => entry.Duration).Aggregate((a, b) => a?.Add(b ?? TimeSpan.Zero) ?? b?.Add(a ?? TimeSpan.Zero));
+
             using StreamReader dateTemplateFile = new(Path.Combine(SettingsManager.PLUGIN_PATH, @"util", @"html_templates", @"date_template.html"));
 
             string exportLines = "";
@@ -347,7 +349,7 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
                 switch (line.Trim())
                 {
                     case DATE_NAME_PLACEHOLDER:
-                        exportLines += date.ToString("dddd, d. MMMM yyyy") + "\n";
+                        exportLines += date.ToString("dddd, d. MMMM yyyy") + " (" + GetDurationAsString(totalDuration) + ")\n";
                         break;
                     case TABLE_ENTRIES_PLACEHOLDER:
                         summaryEntries.ForEach(entry =>
@@ -357,11 +359,7 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
                             exportLines += "<td>" + (entry.Start?.ToString("HH:mm") ?? "") + "</td>";
                             exportLines += "<td>" + (entry.End?.ToString("HH:mm") ?? "") + "</td>";
                             exportLines +=
-                                "<td>" +
-                                (entry.Duration != null
-                                    ? (entry.Duration?.Hours + "h " + entry.Duration?.Minutes + "m " + entry.Duration?.Seconds + "s")
-                                    : ""
-                                ) +
+                                "<td>" + GetDurationAsString(entry.Duration) +
                                 "</td>";
                             exportLines += "</tr>";
 
@@ -372,11 +370,7 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
                                 exportLines += "<td>" + (child.Start?.ToString("HH:mm") ?? "") + "</td>";
                                 exportLines += "<td>" + (child.End?.ToString("HH:mm") ?? "") + "</td>";
                                 exportLines +=
-                                    "<td>" +
-                                    (child.Duration != null
-                                        ? (child.Duration?.Hours + "h " + child.Duration?.Minutes + "m " + child.Duration?.Seconds + "s")
-                                        : ""
-                                    ) +
+                                    "<td>" + GetDurationAsString(child.Duration) +
                                     "</td>";
                                 exportLines += "</tr>";
                             }
