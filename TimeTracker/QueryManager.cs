@@ -10,13 +10,18 @@ using Wox.Plugin;
 
 namespace Community.Powertoys.Run.Plugin.TimeTracker
 {
-    public partial class QueryManager(SettingsManager settingsManager, Dictionary<DateOnly, List<TimeTracker.TrackerEntry>>? trackerEntries)
+    public class QueryManager(SettingsManager settingsManager)
     {
         private const string COPY_GLYPH = "\xE8C8";
         private readonly JsonSerializerOptions JSON_SERIALIZER_OPTIONS = new() { WriteIndented = true };
 
+        private Dictionary<DateOnly, List<TimeTracker.TrackerEntry>>? _trackerEntries = [];
+
         public List<Result> CheckQueryAndReturnResults(string queryString)
         {
+            // refresh tracker entries from JSON-file
+            ReadTrackerEntriesFromFile();
+
             return GetQueryResults(queryString)
                 .Where(result => result.ShouldShowResult(queryString))
                 .Select(result => result.GetResult(queryString, settingsManager))
@@ -57,7 +62,7 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
                 new() {
                     AdditionalChecks = (queryString) =>
                         string.IsNullOrWhiteSpace(queryString) &&
-                        trackerEntries?.Count > 0,
+                        _trackerEntries?.Count > 0,
                     Title = "Show Time Tracker Summary",
                     Description = "",
                     IconName = "summary.png",
@@ -66,21 +71,38 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
             ];
         }
 
+        private void ReadTrackerEntriesFromFile()
+        {
+            string jsonString;
+
+            if (!File.Exists(Path.Combine(SettingsManager.PLUGIN_PATH, SettingsManager.SAVES_NAME)))
+            {
+                jsonString = JsonSerializer.Serialize(new Dictionary<DateOnly, List<TimeTracker.TrackerEntry>>());
+                File.WriteAllText(Path.Combine(SettingsManager.PLUGIN_PATH, SettingsManager.SAVES_NAME), jsonString);
+            }
+            else
+            {
+                jsonString = File.ReadAllText(Path.Combine(SettingsManager.PLUGIN_PATH, SettingsManager.SAVES_NAME));
+            }
+
+            _trackerEntries = JsonSerializer.Deserialize<Dictionary<DateOnly, List<TimeTracker.TrackerEntry>>>(jsonString);
+        }
+
         private void WriteTrackerEntriesToFile()
         {
-            string jsonString = JsonSerializer.Serialize(trackerEntries, JSON_SERIALIZER_OPTIONS);
+            string jsonString = JsonSerializer.Serialize(_trackerEntries, JSON_SERIALIZER_OPTIONS);
             File.WriteAllText(Path.Combine(SettingsManager.PLUGIN_PATH, SettingsManager.SAVES_NAME), jsonString);
         }
 
         private void AddNewTrackerEntry(string name)
         {
-            if (!trackerEntries?.ContainsKey(DateOnly.FromDateTime(DateTime.Now)) ?? true)
+            if (!_trackerEntries?.ContainsKey(DateOnly.FromDateTime(DateTime.Now)) ?? true)
             {
-                trackerEntries?.Add(DateOnly.FromDateTime(DateTime.Now), [new TimeTracker.TrackerEntry(name)]);
+                _trackerEntries?.Add(DateOnly.FromDateTime(DateTime.Now), [new TimeTracker.TrackerEntry(name)]);
             }
             else
             {
-                trackerEntries?[DateOnly.FromDateTime(DateTime.Now)].Add(new TimeTracker.TrackerEntry(name));
+                _trackerEntries?[DateOnly.FromDateTime(DateTime.Now)].Add(new TimeTracker.TrackerEntry(name));
             }
 
             WriteTrackerEntriesToFile();
@@ -88,9 +110,9 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
 
         private void AddEndTimeToAllRunningTasks()
         {
-            if (trackerEntries != null)
+            if (_trackerEntries != null)
             {
-                foreach (var entryList in trackerEntries.Values)
+                foreach (var entryList in _trackerEntries.Values)
                 {
                     entryList
                         .Where(entry => entry.End == null)
@@ -104,9 +126,9 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
 
         private string? GetRunningTasksName()
         {
-            if (trackerEntries?.ContainsKey(DateOnly.FromDateTime(DateTime.Now)) ?? false)
+            if (_trackerEntries?.ContainsKey(DateOnly.FromDateTime(DateTime.Now)) ?? false)
             {
-                return trackerEntries?[DateOnly.FromDateTime(DateTime.Now)]
+                return _trackerEntries?[DateOnly.FromDateTime(DateTime.Now)]
                     .Where(entry => entry.End == null)
                     .FirstOrDefault()?.Name;
             }
@@ -116,9 +138,9 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
 
         private int GetNumberOfCurrentRunningTasks()
         {
-            if (trackerEntries?.ContainsKey(DateOnly.FromDateTime(DateTime.Now)) ?? false)
+            if (_trackerEntries?.ContainsKey(DateOnly.FromDateTime(DateTime.Now)) ?? false)
             {
-                return trackerEntries?[DateOnly.FromDateTime(DateTime.Now)].Where(entry => entry.End == null).Count() ?? 0;
+                return _trackerEntries?[DateOnly.FromDateTime(DateTime.Now)].Where(entry => entry.End == null).Count() ?? 0;
             }
 
             return 0;
@@ -136,13 +158,13 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
             switch (settingsManager.SummaryExportTypeSetting.SelectedOption)
             {
                 case (int)SettingsManager.SummaryExportType.CSV:
-                    exportFile = ExportManager.ExportToCSV(trackerEntries);
+                    exportFile = ExportManager.ExportToCSV(_trackerEntries);
                     break;
                 case (int)SettingsManager.SummaryExportType.Markdown:
-                    exportFile = ExportManager.ExportToMarkdown(trackerEntries);
+                    exportFile = ExportManager.ExportToMarkdown(_trackerEntries);
                     break;
                 case (int)SettingsManager.SummaryExportType.HTML:
-                    exportFile = ExportManager.ExportToHTML(trackerEntries, settingsManager.HtmlExportTheme);
+                    exportFile = ExportManager.ExportToHTML(_trackerEntries, settingsManager.HtmlExportTheme);
                     break;
             }
 
