@@ -17,6 +17,7 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
         private readonly JsonSerializerOptions JSON_SERIALIZER_OPTIONS = new() { WriteIndented = true };
 
         private Dictionary<DateOnly, List<TimeTracker.TrackerEntry>>? _trackerEntries = [];
+        private bool _jsonBroken = false;
 
         public List<Result> CheckQueryAndReturnResults(string queryString)
         {
@@ -30,79 +31,110 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
 
         public List<QueryResult> GetQueryResults(string queryString)
         {
-            return [
-                new() {
-                    AdditionalChecks = (queryString) =>
-                        string.IsNullOrWhiteSpace(queryString) &&
-                        IsRunningTaskPresent(),
-                    Title = "Stop Currently Running Task",
-                    Description =
-                        GetNumberOfCurrentRunningTasks() > 1
-                            ? "Stops all currently running tasks."
-                            : "Stops the currently running task '" + GetRunningTasksName() + "'.",
-                    IconName = "stop.png",
-                    Action = (_) => ShowNotificationsForStoppedAndStartedTasks(AddEndTimeToAllRunningTasks(), null)
-                },
-                new() {
-                    AdditionalChecks = (queryString) =>
-                        !string.IsNullOrWhiteSpace(queryString),
-                    Title = "Start New Task",
-                    Description =
-                        IsRunningTaskPresent()
-                            ? GetNumberOfCurrentRunningTasks() > 1
-                                ? "Stops currently running tasks and starts a new one named '" + queryString + "'."
-                                : "Stops the currently running task '" + GetRunningTasksName() + "' and starts a new one named '" + queryString + "'."
-                            : "Starts a new task named '" + queryString + "'.",
-                    IconName = "start.png",
-                    Action = (queryString) => {
-                        List<TimeTracker.TrackerEntry> stoppedTasks = AddEndTimeToAllRunningTasks();
-                        AddNewTrackerEntry(queryString);
-                        ShowNotificationsForStoppedAndStartedTasks(stoppedTasks, queryString);
+            return _jsonBroken
+                ? []
+                : [
+                    new() {
+                        AdditionalChecks = (queryString) =>
+                            string.IsNullOrWhiteSpace(queryString) &&
+                            IsRunningTaskPresent(),
+                        Title = "Stop Currently Running Task",
+                        Description =
+                            GetNumberOfCurrentRunningTasks() > 1
+                                ? "Stops all currently running tasks."
+                                : "Stops the currently running task '" + GetRunningTasksName() + "'.",
+                        IconName = "stop.png",
+                        Action = (_) => ShowNotificationsForStoppedAndStartedTasks(AddEndTimeToAllRunningTasks(), null)
+                    },
+                    new() {
+                        AdditionalChecks = (queryString) =>
+                            !string.IsNullOrWhiteSpace(queryString),
+                        Title = "Start New Task",
+                        Description =
+                            IsRunningTaskPresent()
+                                ? GetNumberOfCurrentRunningTasks() > 1
+                                    ? "Stops currently running tasks and starts a new one named '" + queryString + "'."
+                                    : "Stops the currently running task '" + GetRunningTasksName() + "' and starts a new one named '" + queryString + "'."
+                                : "Starts a new task named '" + queryString + "'.",
+                        IconName = "start.png",
+                        Action = (queryString) => {
+                            List<TimeTracker.TrackerEntry> stoppedTasks = AddEndTimeToAllRunningTasks();
+                            AddNewTrackerEntry(queryString);
+                            ShowNotificationsForStoppedAndStartedTasks(stoppedTasks, queryString);
+                        }
+                    },
+                    new() {
+                        AdditionalChecks = (queryString) =>
+                            string.IsNullOrWhiteSpace(queryString) &&
+                            _trackerEntries?.Count > 0,
+                        Title = "Show Time Tracker Summary",
+                        IconName = "summary.png",
+                        Action = (_) => CreateAndOpenTimeTrackerSummary()
+                    },
+                    new() {
+                        AdditionalChecks = (queryString) =>
+                            string.IsNullOrWhiteSpace(queryString) &&
+                            settingsManager.ShowSavesFileSetting.Value,
+                        Title = "Open Saved Tracker Entries",
+                        Description = "Opens the JSON-file in which the tracked times are saved.",
+                        IconName = "open.png",
+                        Action = (_) => {
+                            Process.Start(
+                                new ProcessStartInfo
+                                {
+                                    FileName = Path.Combine(SettingsManager.PLUGIN_PATH, SettingsManager.SAVES_NAME),
+                                    UseShellExecute = true
+                                }
+                            );
+                        }
                     }
-                },
-                new() {
-                    AdditionalChecks = (queryString) =>
-                        string.IsNullOrWhiteSpace(queryString) &&
-                        _trackerEntries?.Count > 0,
-                    Title = "Show Time Tracker Summary",
-                    IconName = "summary.png",
-                    Action = (_) => CreateAndOpenTimeTrackerSummary()
-                },
-                new() {
-                    AdditionalChecks = (queryString) =>
-                        string.IsNullOrWhiteSpace(queryString) &&
-                        settingsManager.ShowSavesFileSetting.Value,
-                    Title = "Open Saved Tracker Entries",
-                    Description = "Opens the JSON-file in which the tracked times are saved.",
-                    IconName = "open.png",
-                    Action = (_) => {
-                        Process.Start(
-                            new ProcessStartInfo
-                            {
-                                FileName = Path.Combine(SettingsManager.PLUGIN_PATH, SettingsManager.SAVES_NAME),
-                                UseShellExecute = true
-                            }
-                        );
-                    }
-                }
-            ];
+                ];
         }
 
         private void ReadTrackerEntriesFromFile()
         {
-            string jsonString;
-
             if (!File.Exists(Path.Combine(SettingsManager.PLUGIN_PATH, SettingsManager.SAVES_NAME)))
             {
-                jsonString = JsonSerializer.Serialize(new Dictionary<DateOnly, List<TimeTracker.TrackerEntry>>());
+                _trackerEntries = [];
+                string jsonString = JsonSerializer.Serialize(_trackerEntries);
                 File.WriteAllText(Path.Combine(SettingsManager.PLUGIN_PATH, SettingsManager.SAVES_NAME), jsonString);
+
+                _jsonBroken = false;
             }
             else
             {
-                jsonString = File.ReadAllText(Path.Combine(SettingsManager.PLUGIN_PATH, SettingsManager.SAVES_NAME));
+                try
+                {
+                    string jsonString = File.ReadAllText(Path.Combine(SettingsManager.PLUGIN_PATH, SettingsManager.SAVES_NAME));
+                    _trackerEntries = JsonSerializer.Deserialize<Dictionary<DateOnly, List<TimeTracker.TrackerEntry>>>(jsonString);
+
+                    _jsonBroken = false;
+                }
+                catch (JsonException)
+                {
+                    if (!_jsonBroken)
+                    {
+                        _jsonBroken = true;
+
+                        if (MessageBoxResult.Yes == MessageBox.Show(
+                            "The JSON containing your tracker data seems to be broken and needs fixing.\nDo you wan't to fix it now?",
+                            "Data-JSON Needs Repair",
+                            MessageBoxButton.YesNo,
+                            MessageBoxImage.Error
+                        ))
+                        {
+                            Process.Start(
+                                new ProcessStartInfo
+                                {
+                                    FileName = Path.Combine(SettingsManager.PLUGIN_PATH, SettingsManager.SAVES_NAME),
+                                    UseShellExecute = true
+                                }
+                            );
+                        }
+                    }
+                }
             }
 
-            _trackerEntries = JsonSerializer.Deserialize<Dictionary<DateOnly, List<TimeTracker.TrackerEntry>>>(jsonString);
         }
 
         private void WriteTrackerEntriesToFile()
