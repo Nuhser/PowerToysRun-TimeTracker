@@ -39,9 +39,17 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
 
         public BooleanSetting ShowNotificationsSetting = new()
         {
-            Key = "show_notifications_setting",
-            Label = "Show Pop-up Notifications",
+            Key = "show_notifications",
+            Label = "Enable Pop-up Notifications",
             Description = "Enables/disables pop-ups when starting or stopping a task.",
+            Value = false
+        };
+
+        public BooleanSetting ShowSavesFileSetting = new()
+        {
+            Key = "show_saves_file",
+            Label = "Enable Data-File Editing",
+            Description = "Show/hide option to open the saves-file. Can be used to edit the data.",
             Value = false
         };
 
@@ -49,7 +57,8 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
         {
             return [
                 SummaryExportTypeSetting,
-                ShowNotificationsSetting
+                ShowNotificationsSetting,
+                ShowSavesFileSetting
             ];
         }
 

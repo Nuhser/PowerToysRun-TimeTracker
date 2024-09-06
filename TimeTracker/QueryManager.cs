@@ -65,9 +65,25 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
                         string.IsNullOrWhiteSpace(queryString) &&
                         _trackerEntries?.Count > 0,
                     Title = "Show Time Tracker Summary",
-                    Description = "",
                     IconName = "summary.png",
                     Action = (_) => CreateAndOpenTimeTrackerSummary()
+                },
+                new() {
+                    AdditionalChecks = (queryString) =>
+                        string.IsNullOrWhiteSpace(queryString) &&
+                        settingsManager.ShowSavesFileSetting.Value,
+                    Title = "Open Saved Tracker Entries",
+                    Description = "Opens the JSON-file in which the tracked times are saved.",
+                    IconName = "open.png",
+                    Action = (_) => {
+                        Process.Start(
+                            new ProcessStartInfo
+                            {
+                                FileName = Path.Combine(SettingsManager.PLUGIN_PATH, SettingsManager.SAVES_NAME),
+                                UseShellExecute = true
+                            }
+                        );
+                    }
                 }
             ];
         }
