@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using System.Windows;
 using System.Windows.Input;
 using Wox.Plugin;
 
@@ -19,7 +20,6 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
 
         public List<Result> CheckQueryAndReturnResults(string queryString)
         {
-            // refresh tracker entries from JSON-file
             ReadTrackerEntriesFromFile();
 
             return GetQueryResults(queryString)
@@ -41,7 +41,7 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
                             ? "Stops all currently running tasks."
                             : "Stops the currently running task '" + GetRunningTasksName() + "'.",
                     IconName = "stop.png",
-                    Action = (_) => AddEndTimeToAllRunningTasks()
+                    Action = (_) => ShowNotificationsForStoppedAndStartedTasks(AddEndTimeToAllRunningTasks(), null)
                 },
                 new() {
                     AdditionalChecks = (queryString) =>
@@ -55,8 +55,9 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
                             : "Starts a new task named '" + queryString + "'.",
                     IconName = "start.png",
                     Action = (queryString) => {
-                        AddEndTimeToAllRunningTasks();
+                        List<TimeTracker.TrackerEntry> stoppedTasks = AddEndTimeToAllRunningTasks();
                         AddNewTrackerEntry(queryString);
+                        ShowNotificationsForStoppedAndStartedTasks(stoppedTasks, queryString);
                     }
                 },
                 new() {
@@ -108,8 +109,10 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
             WriteTrackerEntriesToFile();
         }
 
-        private void AddEndTimeToAllRunningTasks()
+        private List<TimeTracker.TrackerEntry> AddEndTimeToAllRunningTasks()
         {
+            List<TimeTracker.TrackerEntry> stoppedTasks = [];
+
             if (_trackerEntries != null)
             {
                 foreach (var entryList in _trackerEntries.Values)
@@ -117,10 +120,56 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
                     entryList
                         .Where(entry => entry.End == null)
                         .ToList()
-                        .ForEach(entry => entry.End = DateTime.Now);
+                        .ForEach(entry =>
+                        {
+                            entry.End = DateTime.Now;
+                            stoppedTasks.Add(entry);
+                        });
                 }
 
                 WriteTrackerEntriesToFile();
+            }
+
+            return stoppedTasks;
+        }
+
+        private void ShowNotificationsForStoppedAndStartedTasks(List<TimeTracker.TrackerEntry> stoppedTasks, string? newTasksName)
+        {
+            if (settingsManager.ShowNotificationsSetting.Value)
+            {
+                if (stoppedTasks.Count > 0)
+                {
+                    TimeTracker.TrackerEntry stoppedTask = stoppedTasks.First();
+                    TimeSpan? duration = stoppedTask.End - stoppedTask.Start;
+
+                    if (newTasksName == null)
+                    {
+                        MessageBox.Show(
+                            "Stopped task '" + stoppedTask.Name + "' after " + duration?.Hours + "h " + duration?.Minutes + "m " + duration?.Seconds + "s.",
+                            "Task Stopped",
+                            MessageBoxButton.OK,
+                            MessageBoxImage.Information
+                        );
+                    }
+                    else
+                    {
+                        MessageBox.Show(
+                            "Stopped task '" + stoppedTask.Name + "' after " + duration?.Hours + "h " + duration?.Minutes + "m " + duration?.Seconds + "s.\nStarted task named '" + newTasksName + "'.",
+                            "Task Stopped & New Task Started",
+                            MessageBoxButton.OK,
+                            MessageBoxImage.Information
+                        );
+                    }
+                }
+                else if (newTasksName != null)
+                {
+                    MessageBox.Show(
+                        "Started task named '" + newTasksName + "'.",
+                        "New Task Started",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Information
+                    );
+                }
             }
         }
 
@@ -170,7 +219,7 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
 
             if (exportFile != null)
             {
-            Process.Start(
+                Process.Start(
                     new ProcessStartInfo
                     {
                         FileName = exportFile,

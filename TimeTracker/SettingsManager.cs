@@ -37,10 +37,19 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
             SelectableOptions = Enum.GetNames(typeof(SummaryExportType))
         };
 
+        public BooleanSetting ShowNotificationsSetting = new()
+        {
+            Key = "show_notifications_setting",
+            Label = "Show Pop-up Notifications",
+            Description = "Enables/disables pop-ups when starting or stopping a task.",
+            Value = false
+        };
+
         public List<Setting> GetSettings()
         {
             return [
-                SummaryExportTypeSetting
+                SummaryExportTypeSetting,
+                ShowNotificationsSetting
             ];
         }
 
