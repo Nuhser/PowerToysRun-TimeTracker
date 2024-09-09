@@ -320,7 +320,7 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
                 switch (line.Trim())
                 {
                     case DATE_PLACEHOLDER:
-                        dates.ToList().ForEach(date => exportLines += FillAndReturnDateTemplate(date, summaryEntries[date]));
+                        dates.ToList().ForEach(date => exportLines += FillAndReturnDateTemplate(date, summaryEntries[date], active && date == dates.Last()));
                         break;
                     default:
                         exportLines += line.Replace(YEAR_MONTH_ID_PLACEHOLDER, string.Join("-", [year, month])).Replace(SHOW_ACTIVE_PLACEHOLDER, active ? "show active" : "");
@@ -331,11 +331,13 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
             return exportLines;
         }
 
-        private static string FillAndReturnDateTemplate(DateOnly date, List<SummaryEntry> summaryEntries)
+        private static string FillAndReturnDateTemplate(DateOnly date, List<SummaryEntry> summaryEntries, bool active)
         {
             const string DATE_ID_PLACEHOLDER = "%%DATE-ID%%";
             const string DATE_NAME_PLACEHOLDER = "%%DATE-NAME%%";
             const string TABLE_ENTRIES_PLACEHOLDER = "%%TABLE-ENTRIES%%";
+            const string SHOW_PLACEHOLDER = "%%SHOW%%";
+            const string COLLAPSED_PLACEHOLDER = "%%COLLAPSED%%";
 
             TimeSpan? totalDuration = summaryEntries.Select(entry => entry.Duration).Aggregate((a, b) => a?.Add(b ?? TimeSpan.Zero) ?? b?.Add(a ?? TimeSpan.Zero));
 
@@ -349,7 +351,7 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
                 switch (line.Trim())
                 {
                     case DATE_NAME_PLACEHOLDER:
-                        exportLines += date.ToString("dddd, d. MMMM yyyy") + " (" + GetDurationAsString(totalDuration) + ")\n";
+                        exportLines += date.ToString("dddd, d. MMMM yyyy") + ((totalDuration != null) ? (" (" + GetDurationAsString(totalDuration) + ")") : "") + "\n";
                         break;
                     case TABLE_ENTRIES_PLACEHOLDER:
                         summaryEntries.ForEach(entry =>
@@ -377,7 +379,9 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
                         });
                         break;
                     default:
-                        exportLines += line.Replace(DATE_ID_PLACEHOLDER, date.ToString("yyyy-MM-dd"));
+                        exportLines += line.Replace(DATE_ID_PLACEHOLDER, date.ToString("yyyy-MM-dd"))
+                            .Replace(SHOW_PLACEHOLDER, active ? "show" : "")
+                            .Replace(COLLAPSED_PLACEHOLDER, !active ? "collapsed" : "");
                         break;
                 }
             }
