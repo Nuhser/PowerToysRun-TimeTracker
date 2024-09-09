@@ -88,7 +88,7 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
             {
                 TimeSpan? totalDuration = day.Value.Select(entry => entry.Duration).Aggregate((a, b) => a?.Add(b ?? TimeSpan.Zero) ?? b?.Add(a ?? TimeSpan.Zero));
 
-                exportFile.WriteLine("## " + day.Key.ToString("dddd, d. MMMM yyyy") + ((totalDuration != null) ? (" (" + GetDurationAsString(totalDuration) + ")") : ""));
+                exportFile.WriteLine("## " + day.Key.ToString("dddd, d. MMMM yyyy") + ((totalDuration != null) ? (" (Total: " + GetDurationAsString(totalDuration) + ")") : ""));
                 exportFile.WriteLine();
                 exportFile.WriteLine("|Name|Start|End|Duration|");
                 exportFile.WriteLine("|-----|-----|-----|-----|");
@@ -346,7 +346,7 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
                 switch (line.Trim())
                 {
                     case DATE_NAME_PLACEHOLDER:
-                        exportLines += date.ToString("dddd, d. MMMM yyyy") + ((totalDuration != null) ? (" (" + GetDurationAsString(totalDuration) + ")") : "") + "\n";
+                        exportLines += date.ToString("dddd, d. MMMM yyyy") + ((totalDuration != null) ? (" (Total: " + GetDurationAsString(totalDuration) + ")") : "") + "\n";
                         break;
                     case TABLE_ENTRIES_PLACEHOLDER:
                         summaryEntries.ForEach(entry =>
