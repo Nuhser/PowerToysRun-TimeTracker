@@ -49,7 +49,10 @@ if ($?) {
         Copy-Item $source"\util" $destination"\util" -Recurse
         Copy-Item $source"\icons" $destination"\icons" -Recurse
         Copy-Item ".\README.md" $destination"\README.md"
-        Copy-Item $plugin_folder"\data.json" $destination"\data.json"
+
+        if (Test-Path -Path $plugin_folder"\data.json") {
+            Copy-Item $plugin_folder"\data.json" $destination"\data.json"
+        }
 
         Write-Host "`nCopying data into plugins folder..."
 
@@ -66,7 +69,10 @@ if ($?) {
             Write-Host "Removing old release-archive..."
             Remove-Item "Release.zip"
         }
-        Remove-Item $destination"\data.json"
+        if (Test-Path -Path $destination"\data.json") {
+            Remove-Item $destination"\data.json"
+        }
+
         Compress-Archive -Path $destination -DestinationPath "Release.zip"
 
         Write-Host "Release-archive created."
