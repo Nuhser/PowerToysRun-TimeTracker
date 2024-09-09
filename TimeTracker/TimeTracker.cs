@@ -83,12 +83,5 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
                 _settingsManager.HtmlExportTheme = "dark";
             }
         }
-
-        public class TrackerEntry(string name)
-        {
-            public string Name { get; set; } = name;
-            public DateTime Start { get; set; } = DateTime.Now;
-            public DateTime? End { get; set; } = null;
-        }
     }
 }

@@ -2,13 +2,14 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using static Community.Powertoys.Run.Plugin.TimeTracker.Utility;
 
 namespace Community.Powertoys.Run.Plugin.TimeTracker
 {
     public class ExportManager
     {
         private static Dictionary<DateOnly, List<SummaryEntry>> GetDateToSummaryEntriesDict(
-            Dictionary<DateOnly, List<TimeTracker.TrackerEntry>>? trackerEntries
+            Dictionary<DateOnly, List<TrackerEntry>>? trackerEntries
         )
         {
             Dictionary<DateOnly, List<SummaryEntry>> dateToSummaryEntries = [];
@@ -72,16 +73,8 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
             return dates.Where(date => date.ToString("yyyy") == year).Where(date => date.ToString("MMMM") == month).ToHashSet();
         }
 
-        private static string GetDurationAsString(TimeSpan? duration)
-        {
-            if (duration == null)
-                return "";
-
-            return duration?.Hours + "h " + duration?.Minutes + "m " + duration?.Seconds + "s";
-        }
-
         public static string ExportToMarkdown(
-            Dictionary<DateOnly, List<TimeTracker.TrackerEntry>>? trackerEntries
+            Dictionary<DateOnly, List<TrackerEntry>>? trackerEntries
         )
         {
             string exportFileName = Path.Combine(SettingsManager.PLUGIN_PATH, @"summary.md");
@@ -133,7 +126,7 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
         }
 
         public static string ExportToCSV(
-            Dictionary<DateOnly, List<TimeTracker.TrackerEntry>>? trackerEntries
+            Dictionary<DateOnly, List<TrackerEntry>>? trackerEntries
         )
         {
             string exportFileName = Path.Combine(SettingsManager.PLUGIN_PATH, @"summary.csv");
@@ -171,7 +164,7 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
         }
 
         public static string ExportToHTML(
-            Dictionary<DateOnly, List<TimeTracker.TrackerEntry>>? trackerEntries,
+            Dictionary<DateOnly, List<TrackerEntry>>? trackerEntries,
             string theme
         )
         {
