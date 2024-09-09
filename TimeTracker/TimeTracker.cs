@@ -3,7 +3,6 @@ using Microsoft.PowerToys.Settings.UI.Library;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Text.Json;
 using System.Windows.Controls;
 using Wox.Plugin;
 using Wox.Plugin.Logger;
