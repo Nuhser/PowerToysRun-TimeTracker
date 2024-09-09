@@ -1,13 +1,13 @@
 {
-    "ID": "EF1B799F615144E3B0E1AA15878B2077",
-    "ActionKeyword": "+",
-    "IsGlobal": false,
-    "Name": "Time Tracker",
-    "Author": "Nuhser",
-    "Version": "0.0.0",
-    "Language": "csharp",
-    "Website": "https://github.com/Nuhser/PowerToysRun-TimeTracker",
-    "ExecuteFileName": "Community.PowerToys.Run.Plugin.TimeTracker.dll",
-    "IcoPathDark": "icons\\dark\\logo.png",
-    "IcoPathLight": "icons\\light\\logo.png"
+    "ID":  "EF1B799F615144E3B0E1AA15878B2077",
+    "ActionKeyword":  "+",
+    "IsGlobal":  false,
+    "Name":  "Time Tracker",
+    "Author":  "Nuhser",
+    "Version":  "1.0.0",
+    "Language":  "csharp",
+    "Website":  "https://github.com/Nuhser/PowerToysRun-TimeTracker",
+    "ExecuteFileName":  "Community.PowerToys.Run.Plugin.TimeTracker.dll",
+    "IcoPathDark":  "icons\\dark\\logo.png",
+    "IcoPathLight":  "icons\\light\\logo.png"
 }
