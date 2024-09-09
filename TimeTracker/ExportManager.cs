@@ -86,7 +86,9 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
 
             foreach (var day in GetDateToSummaryEntriesDict(trackerEntries))
             {
-                exportFile.WriteLine("## " + day.Key.ToString("dddd, d. MMMM yyyy"));
+                TimeSpan? totalDuration = day.Value.Select(entry => entry.Duration).Aggregate((a, b) => a?.Add(b ?? TimeSpan.Zero) ?? b?.Add(a ?? TimeSpan.Zero));
+
+                exportFile.WriteLine("## " + day.Key.ToString("dddd, d. MMMM yyyy") + ((totalDuration != null) ? (" (" + GetDurationAsString(totalDuration) + ")") : ""));
                 exportFile.WriteLine();
                 exportFile.WriteLine("|Name|Start|End|Duration|");
                 exportFile.WriteLine("|-----|-----|-----|-----|");
