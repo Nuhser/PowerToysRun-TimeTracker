@@ -54,19 +54,21 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
             Value = false
         };
 
-        public TextSetting DataPathSetting = new()
+        public FilePathSetting DataPathSetting = new()
         {
             Key = "data_path",
             Label = "Path to Save Location",
             Description = "Folder in which the tracker's data should be saved.",
+            FileName = "data.json",
             Validator = new DirectoryPathValidator(true)
         };
 
-        public TextSetting ExportPathSetting = new()
+        public DirectoryPathSetting ExportPathSetting = new()
         {
             Key = "export_path",
             Label = "Path to Export Location",
             Description = "Folder in which the tracker's summary files should be saved.",
+            DirectoryName = "exports",
             Validator = new DirectoryPathValidator(true)
         };
 
@@ -187,6 +189,47 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
             }
         }
 
+        public class FilePathSetting : Setting
+        {
+            public override PluginAdditionalOption.AdditionalOptionType OptionType { get; } = PluginAdditionalOption.AdditionalOptionType.Textbox;
+            public required string FileName { get; set; }
+            public string? Path { get; set; }
+            public string? PlaceHolder { get; set; }
+
+            public override void SetValue(PluginAdditionalOption option)
+            {
+                // check if old should be copied
+                // check if overwrite is needed
+
+                Path = option.TextValue;
+            }
+
+            protected override void AddTypeSpecificOptionProperties(PluginAdditionalOption option)
+            {
+                option.TextValue = Path;
+                option.PlaceholderText = PlaceHolder;
+            }
+        }
+
+        public class DirectoryPathSetting : Setting
+        {
+            public override PluginAdditionalOption.AdditionalOptionType OptionType { get; } = PluginAdditionalOption.AdditionalOptionType.Textbox;
+            public required string DirectoryName { get; set; }
+            public string? Path { get; set; }
+            public string? PlaceHolder { get; set; }
+
+            public override void SetValue(PluginAdditionalOption option)
+            {
+                Path = option.TextValue;
+            }
+
+            protected override void AddTypeSpecificOptionProperties(PluginAdditionalOption option)
+            {
+                option.TextValue = Path;
+                option.PlaceholderText = PlaceHolder;
+            }
+        }
+
         public class DropdownSetting : Setting
         {
             public override PluginAdditionalOption.AdditionalOptionType OptionType { get; } = PluginAdditionalOption.AdditionalOptionType.Combobox;
@@ -254,9 +297,7 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
             protected override bool IsValueAlreadyChecked(PluginAdditionalOption option)
             {
                 bool alreadyChecked = option.TextValue == _lastCheckedValue;
-
                 _lastCheckedValue = option.TextValue;
-
                 return alreadyChecked;
             }
 
