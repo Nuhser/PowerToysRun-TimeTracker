@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Windows;
 using Microsoft.PowerToys.Settings.UI.Library;
 
 namespace Community.Powertoys.Run.Plugin.TimeTracker
@@ -54,30 +53,12 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
             Value = false
         };
 
-        public TextSetting DataPathSetting = new()
-        {
-            Key = "data_path",
-            Label = "Path to Save Location",
-            Description = "Folder in which the tracker's data should be saved.",
-            Validator = new DirectoryPathValidator(true)
-        };
-
-        public TextSetting ExportPathSetting = new()
-        {
-            Key = "export_path",
-            Label = "Path to Export Location",
-            Description = "Folder in which the tracker's summary files should be saved.",
-            Validator = new DirectoryPathValidator(true)
-        };
-
         public List<Setting> GetSettings()
         {
             return [
                 SummaryExportTypeSetting,
                 ShowNotificationsSetting,
-                ShowSavesFileSetting,
-                DataPathSetting,
-                ExportPathSetting
+                ShowSavesFileSetting
             ];
         }
 
@@ -98,12 +79,7 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
                 GetSettings()
                     .Where(setting => setting.Key == option.Key)
                     .ToList()
-                    .ForEach(setting =>
-                        {
-                            if (setting.Validator == null || setting.Validator.ValidateSetting(setting, option))
-                                setting.SetValue(option);
-                        }
-                    );
+                    .ForEach(setting => setting.SetValue(option));
             }
         }
 
@@ -113,7 +89,6 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
             public required string Key { get; set; }
             public required string Label { get; set; }
             public string? Description { get; set; }
-            public SettingValidator? Validator { get; set; }
             public abstract PluginAdditionalOption.AdditionalOptionType OptionType { get; }
 
             public abstract void SetValue(PluginAdditionalOption option);
@@ -209,70 +184,6 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
                 }
 
                 option.ComboBoxItems = items;
-            }
-        }
-
-        public abstract class SettingValidator
-        {
-            public bool ValidateSetting(Setting setting, PluginAdditionalOption option)
-            {
-                if (ValidationMethod(setting, option))
-                {
-                    if (!IsValueAlreadyChecked(option))
-                        ValidationSuccessMethod(setting, option);
-
-                    return true;
-                }
-                else
-                {
-                    if (!IsValueAlreadyChecked(option))
-                        ValidationFailureMethod(setting, option);
-
-                    return false;
-                }
-            }
-
-            protected abstract bool IsValueAlreadyChecked(PluginAdditionalOption option);
-
-            protected abstract bool ValidationMethod(Setting setting, PluginAdditionalOption option);
-
-            protected virtual void ValidationSuccessMethod(Setting setting, PluginAdditionalOption option)
-            {
-                return;
-            }
-
-            protected virtual void ValidationFailureMethod(Setting setting, PluginAdditionalOption option)
-            {
-                return;
-            }
-        }
-
-        public class DirectoryPathValidator(bool acceptNull) : SettingValidator
-        {
-            private string? _lastCheckedValue = null;
-
-            protected override bool IsValueAlreadyChecked(PluginAdditionalOption option)
-            {
-                bool alreadyChecked = option.TextValue == _lastCheckedValue;
-
-                _lastCheckedValue = option.TextValue;
-
-                return alreadyChecked;
-            }
-
-            protected override bool ValidationMethod(Setting setting, PluginAdditionalOption option)
-            {
-                return (acceptNull && string.IsNullOrEmpty(option.TextValue)) || Directory.Exists(option.TextValue);
-            }
-
-            protected override void ValidationFailureMethod(Setting setting, PluginAdditionalOption option)
-            {
-                MessageBox.Show(
-                    "The path you set for setting '" + setting.Label + "' is not valid.",
-                    "Invalid Folder Path",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Error
-                );
             }
         }
     }
