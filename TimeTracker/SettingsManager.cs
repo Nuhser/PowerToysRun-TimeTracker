@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Windows;
 using Microsoft.PowerToys.Settings.UI.Library;
 
 namespace Community.Powertoys.Run.Plugin.TimeTracker
@@ -76,7 +77,9 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
             return [
                 SummaryExportTypeSetting,
                 ShowNotificationsSetting,
-                ShowSavesFileSetting
+                ShowSavesFileSetting,
+                DataPathSetting,
+                ExportPathSetting
             ];
         }
 
@@ -97,7 +100,12 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
                 GetSettings()
                     .Where(setting => setting.Key == option.Key)
                     .ToList()
-                    .ForEach(setting => setting.SetValue(option));
+                    .ForEach(setting =>
+                        {
+                            if (setting.Validator == null || setting.Validator.ValidateSetting(setting, option))
+                                setting.SetValue(option);
+                        }
+                    );
             }
         }
 
@@ -107,6 +115,7 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
             public required string Key { get; set; }
             public required string Label { get; set; }
             public string? Description { get; set; }
+            public SettingValidator? Validator { get; set; }
             public abstract PluginAdditionalOption.AdditionalOptionType OptionType { get; }
 
             public abstract void SetValue(PluginAdditionalOption option);
