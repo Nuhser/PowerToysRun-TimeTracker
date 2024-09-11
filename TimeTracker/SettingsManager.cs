@@ -1,25 +1,51 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using ManagedCommon;
 using Microsoft.PowerToys.Settings.UI.Library;
+using Wox.Plugin;
 
 namespace Community.Powertoys.Run.Plugin.TimeTracker
 {
     public class SettingsManager
     {
-        public static readonly string PLUGIN_PATH =
-            Directory.Exists(@".\RunPlugins\TimeTracker")
-            ? @"RunPlugins\TimeTracker"
-            : Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) + @"\Microsoft\PowerToys\PowerToys Run\Plugins\TimeTracker";
+        public static readonly string SETTINGS_DIRECTORY_PATH =
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) +
+            @"\Microsoft\PowerToys\PowerToys Run\Settings\Plugins\Community.PowerToys.Run.Plugin.TimeTracker\";
 
-        public static readonly string SAVES_NAME = "data.json";
+        public static readonly string DATA_PATH = Path.Combine(SETTINGS_DIRECTORY_PATH, "data.json");
 
-        public static readonly string LIGHT_ICON_PATH = "icons/light/";
-        public static readonly string DARK_ICON_PATH = "icons/dark/";
-        public string IconPath { get; set; } = LIGHT_ICON_PATH;
+        private string? iconPath;
+        public string? IconPath
+        {
+            get { return iconPath ?? throw new UnreachableException("SettingsManager.IconPath was read before first init during TimeTracker#Init"); }
+            set { iconPath = value; }
+        }
 
-        public string HtmlExportTheme { get; set; } = "light";
+        private string? htmlExportTheme;
+        public string? HtmlExportTheme
+        {
+            get { return htmlExportTheme ?? throw new UnreachableException("SettingsManager.HtmlExportTheme was read before first init during TimeTracker#Init"); }
+            set { htmlExportTheme = value; }
+        }
+
+        private string? pluginInstallationPath;
+        public string? PluginInstallationPath
+        {
+            get { return pluginInstallationPath ?? throw new UnreachableException("SettingsManager.PluginInstallationPath was read before first init during TimeTracker#Init"); }
+
+            set { pluginInstallationPath = value; }
+        }
+
+        public SettingsManager()
+        {
+            if (!Directory.Exists(SETTINGS_DIRECTORY_PATH))
+            {
+                Directory.CreateDirectory(SETTINGS_DIRECTORY_PATH);
+            }
+        }
 
         public enum SummaryExportType
         {
@@ -60,6 +86,26 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
                 ShowNotificationsSetting,
                 ShowSavesFileSetting
             ];
+        }
+
+        public void InitFromContext(PluginInitContext context)
+        {
+            PluginInstallationPath = Path.GetDirectoryName(context.CurrentPluginMetadata.ExecuteFilePath);
+            SetPluginTheme(context.API.GetCurrentTheme());
+        }
+
+        public void SetPluginTheme(Theme theme)
+        {
+            if (theme is Theme.Light or Theme.HighContrastWhite)
+            {
+                IconPath = "icons/light/";
+                HtmlExportTheme = "light";
+            }
+            else
+            {
+                IconPath = "icons/dark/";
+                HtmlExportTheme = "dark";
+            }
         }
 
         public List<PluginAdditionalOption> GetOptions()

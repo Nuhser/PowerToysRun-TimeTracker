@@ -12,8 +12,9 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
     public class TimeTracker : IPlugin, ISettingProvider, IContextMenu
     {
         private PluginInitContext? _context;
-        private SettingsManager _settingsManager;
-        private QueryManager _queryManager;
+        private readonly SettingsManager _settingsManager;
+        private readonly QueryService _queryService;
+        private readonly ExportService _exportService;
 
         // plugin properties
         public static string PluginID => "EF1B799F615144E3B0E1AA15878B2077";
@@ -24,12 +25,8 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
         public TimeTracker()
         {
             _settingsManager = new SettingsManager();
-            _queryManager = new QueryManager(_settingsManager);
-
-            Log.Info(
-                "Time Tracker started. Plugin installed in " + (Directory.Exists(@".\RunPlugins\TimeTracker") ? "main plugin directory." : "community plugin directory."),
-                GetType()
-            );
+            _exportService = new ExportService(_settingsManager);
+            _queryService = new QueryService(_settingsManager, _exportService);
         }
 
         public Control CreateSettingPanel()
@@ -47,14 +44,14 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
             ArgumentNullException.ThrowIfNull(context);
 
             _context = context;
+            _settingsManager.InitFromContext(_context);
             _context.API.ThemeChanged += OnThemeChanged;
-            UpdateIconPath(_context.API.GetCurrentTheme());
         }
 
         public List<Result> Query(Query query)
         {
             var queryString = query.Search;
-            return _queryManager.CheckQueryAndReturnResults(queryString);
+            return _queryService.CheckQueryAndReturnResults(queryString);
         }
 
         public List<ContextMenuResult> LoadContextMenus(Result selectedResult)
@@ -66,21 +63,7 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
 
         private void OnThemeChanged(Theme currentTheme, Theme newTheme)
         {
-            UpdateIconPath(newTheme);
-        }
-
-        private void UpdateIconPath(Theme theme)
-        {
-            if (theme is Theme.Light or Theme.HighContrastWhite)
-            {
-                _settingsManager.IconPath = SettingsManager.LIGHT_ICON_PATH;
-                _settingsManager.HtmlExportTheme = "light";
-            }
-            else
-            {
-                _settingsManager.IconPath = SettingsManager.DARK_ICON_PATH;
-                _settingsManager.HtmlExportTheme = "dark";
-            }
+            _settingsManager.SetPluginTheme(newTheme);
         }
     }
 }

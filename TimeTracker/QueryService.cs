@@ -12,10 +12,13 @@ using static Community.Powertoys.Run.Plugin.TimeTracker.Utility;
 
 namespace Community.Powertoys.Run.Plugin.TimeTracker
 {
-    public class QueryManager(SettingsManager settingsManager)
+    public class QueryService(SettingsManager settingsManager, ExportService exportService)
     {
         private const string COPY_GLYPH = "\xE8C8";
+
         private readonly JsonSerializerOptions JSON_SERIALIZER_OPTIONS = new() { WriteIndented = true };
+        private readonly SettingsManager _settingsManager = settingsManager;
+        private readonly ExportService _exportService = exportService;
 
         private Dictionary<DateOnly, List<TrackerEntry>>? _trackerEntries = [];
         private bool _jsonBroken = false;
@@ -26,7 +29,7 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
 
             return GetQueryResults(queryString)
                 .Where(result => result.ShouldShowResult(queryString))
-                .Select(result => result.GetResult(queryString, settingsManager))
+                .Select(result => result.GetResult(queryString, _settingsManager))
                 .ToList();
         }
 
@@ -75,7 +78,7 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
                     new() {
                         AdditionalChecks = (queryString) =>
                             string.IsNullOrWhiteSpace(queryString) &&
-                            settingsManager.ShowSavesFileSetting.Value,
+                            _settingsManager.ShowSavesFileSetting.Value,
                         Title = "Open Saved Tracker Entries",
                         Description = "Opens the JSON-file in which the tracked times are saved.",
                         IconName = "open.png",
@@ -83,7 +86,7 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
                             Process.Start(
                                 new ProcessStartInfo
                                 {
-                                    FileName = Path.Combine(SettingsManager.PLUGIN_PATH, SettingsManager.SAVES_NAME),
+                                    FileName = SettingsManager.DATA_PATH,
                                     UseShellExecute = true
                                 }
                             );
@@ -94,11 +97,11 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
 
         private void ReadTrackerEntriesFromFile()
         {
-            if (!File.Exists(Path.Combine(SettingsManager.PLUGIN_PATH, SettingsManager.SAVES_NAME)))
+            if (!File.Exists(SettingsManager.DATA_PATH))
             {
                 _trackerEntries = [];
                 string jsonString = JsonSerializer.Serialize(_trackerEntries);
-                File.WriteAllText(Path.Combine(SettingsManager.PLUGIN_PATH, SettingsManager.SAVES_NAME), jsonString);
+                File.WriteAllText(SettingsManager.DATA_PATH, jsonString);
 
                 _jsonBroken = false;
             }
@@ -106,7 +109,7 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
             {
                 try
                 {
-                    string jsonString = File.ReadAllText(Path.Combine(SettingsManager.PLUGIN_PATH, SettingsManager.SAVES_NAME));
+                    string jsonString = File.ReadAllText(SettingsManager.DATA_PATH);
                     _trackerEntries = JsonSerializer.Deserialize<Dictionary<DateOnly, List<TrackerEntry>>>(jsonString);
 
                     _jsonBroken = false;
@@ -127,7 +130,7 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
                             Process.Start(
                                 new ProcessStartInfo
                                 {
-                                    FileName = Path.Combine(SettingsManager.PLUGIN_PATH, SettingsManager.SAVES_NAME),
+                                    FileName = SettingsManager.DATA_PATH,
                                     UseShellExecute = true
                                 }
                             );
@@ -135,13 +138,12 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
                     }
                 }
             }
-
         }
 
         private void WriteTrackerEntriesToFile()
         {
             string jsonString = JsonSerializer.Serialize(_trackerEntries, JSON_SERIALIZER_OPTIONS);
-            File.WriteAllText(Path.Combine(SettingsManager.PLUGIN_PATH, SettingsManager.SAVES_NAME), jsonString);
+            File.WriteAllText(SettingsManager.DATA_PATH, jsonString);
         }
 
         private void AddNewTrackerEntry(string name)
@@ -184,7 +186,7 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
 
         private void ShowNotificationsForStoppedAndStartedTasks(List<TrackerEntry> stoppedTasks, string? newTasksName)
         {
-            if (settingsManager.ShowNotificationsSetting.Value)
+            if (_settingsManager.ShowNotificationsSetting.Value)
             {
                 if (stoppedTasks.Count > 0)
                 {
@@ -253,16 +255,16 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
         {
             string? exportFile = null;
 
-            switch (settingsManager.SummaryExportTypeSetting.SelectedOption)
+            switch (_settingsManager.SummaryExportTypeSetting.SelectedOption)
             {
                 case (int)SettingsManager.SummaryExportType.CSV:
-                    exportFile = ExportManager.ExportToCSV(_trackerEntries);
+                    exportFile = ExportService.ExportToCSV(_trackerEntries);
                     break;
                 case (int)SettingsManager.SummaryExportType.Markdown:
-                    exportFile = ExportManager.ExportToMarkdown(_trackerEntries);
+                    exportFile = ExportService.ExportToMarkdown(_trackerEntries);
                     break;
                 case (int)SettingsManager.SummaryExportType.HTML:
-                    exportFile = ExportManager.ExportToHTML(_trackerEntries, settingsManager.HtmlExportTheme);
+                    exportFile = _exportService.ExportToHTML(_trackerEntries, _settingsManager.HtmlExportTheme!);
                     break;
             }
 
@@ -298,13 +300,13 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
                     (AdditionalChecks is null || AdditionalChecks(queryString));
             }
 
-            public Result GetResult(string queryString, SettingsManager settingsManager)
+            public Result GetResult(string queryString, SettingsManager _settingsManager)
             {
                 return new Result
                 {
                     Title = Title,
                     SubTitle = Description,
-                    IcoPath = settingsManager.IconPath + IconName,
+                    IcoPath = _settingsManager.IconPath + IconName,
                     Action = _ =>
                     {
                         if (Action is not null)

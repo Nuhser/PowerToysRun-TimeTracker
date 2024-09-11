@@ -6,8 +6,10 @@ using static Community.Powertoys.Run.Plugin.TimeTracker.Utility;
 
 namespace Community.Powertoys.Run.Plugin.TimeTracker
 {
-    public class ExportManager
+    public class ExportService(SettingsManager settingsManager)
     {
+        private readonly SettingsManager _settingsManager = settingsManager;
+
         private static Dictionary<DateOnly, List<SummaryEntry>> GetDateToSummaryEntriesDict(
             Dictionary<DateOnly, List<TrackerEntry>>? trackerEntries
         )
@@ -77,7 +79,7 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
             Dictionary<DateOnly, List<TrackerEntry>>? trackerEntries
         )
         {
-            string exportFileName = Path.Combine(SettingsManager.PLUGIN_PATH, @"summary.md");
+            string exportFileName = Path.Combine(SettingsManager.SETTINGS_DIRECTORY_PATH, @"summary.md");
 
             using StreamWriter exportFile = new(exportFileName);
 
@@ -131,7 +133,7 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
             Dictionary<DateOnly, List<TrackerEntry>>? trackerEntries
         )
         {
-            string exportFileName = Path.Combine(SettingsManager.PLUGIN_PATH, @"summary.csv");
+            string exportFileName = Path.Combine(SettingsManager.SETTINGS_DIRECTORY_PATH, @"summary.csv");
 
             using StreamWriter exportFile = new(exportFileName);
 
@@ -165,12 +167,12 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
             return exportFileName;
         }
 
-        public static string ExportToHTML(
+        public string ExportToHTML(
             Dictionary<DateOnly, List<TrackerEntry>>? trackerEntries,
             string theme
         )
         {
-            string exportFileName = Path.Combine(SettingsManager.PLUGIN_PATH, @"summary.html");
+            string exportFileName = Path.Combine(SettingsManager.SETTINGS_DIRECTORY_PATH, @"summary.html");
             using StreamWriter exportFile = new(exportFileName);
 
             exportFile.WriteLine(FillAndReturnSummaryTemplate(GetDateToSummaryEntriesDict(trackerEntries), theme));
@@ -178,7 +180,7 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
             return exportFileName;
         }
 
-        private static string FillAndReturnSummaryTemplate(Dictionary<DateOnly, List<SummaryEntry>> summaryEntries, string theme)
+        private string FillAndReturnSummaryTemplate(Dictionary<DateOnly, List<SummaryEntry>> summaryEntries, string theme)
         {
             const string YEAR_BUTTON_PLACEHOLDER = "%%YEAR-BUTTON-TEMPLATE%%";
             const string YEAR_PLACEHOLDER = "%%YEAR-TEMPLATE%%";
@@ -190,7 +192,7 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
 
             HashSet<string> years = GetYearsFromDateList([.. summaryEntries.Keys]);
 
-            using StreamReader summaryTemplateFile = new(Path.Combine(SettingsManager.PLUGIN_PATH, @"util", @"html_templates", @"summary_template.html"));
+            using StreamReader summaryTemplateFile = new(Path.Combine(_settingsManager.PluginInstallationPath!, @"util", @"html_templates", @"summary_template.html"));
 
             string exportLines = "";
 
@@ -217,13 +219,13 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
             return exportLines;
         }
 
-        private static string FillAndReturnYearButtonTemplate(string year, bool active)
+        private string FillAndReturnYearButtonTemplate(string year, bool active)
         {
             const string YEAR_ID_PLACEHOLDER = "%%YEAR-ID%%";
             const string YEAR_NAME_PLACEHOLDER = "%%YEAR-NAME%%";
             const string ACTIVE_PLACEHOLDER = "%%ACTIVE%%";
 
-            using StreamReader yearButtonTemplateFile = new(Path.Combine(SettingsManager.PLUGIN_PATH, @"util", @"html_templates", @"year_button_template.html"));
+            using StreamReader yearButtonTemplateFile = new(Path.Combine(_settingsManager.PluginInstallationPath!, @"util", @"html_templates", @"year_button_template.html"));
 
             string exportLines = "";
 
@@ -239,7 +241,7 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
             return exportLines;
         }
 
-        private static string FillAndReturnYearTemplate(Dictionary<DateOnly, List<SummaryEntry>> summaryEntries, string year, bool active)
+        private string FillAndReturnYearTemplate(Dictionary<DateOnly, List<SummaryEntry>> summaryEntries, string year, bool active)
         {
             const string YEAR_ID_PLACEHOLDER = "%%YEAR-ID%%";
             const string MONTH_BUTTON_PLACEHOLDER = "%%MONTH-BUTTON-TEMPLATE%%";
@@ -248,7 +250,7 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
 
             HashSet<string> months = GetMonthsFromDateListByYear([.. summaryEntries.Keys], year);
 
-            using StreamReader yearTemplateFile = new(Path.Combine(SettingsManager.PLUGIN_PATH, @"util", @"html_templates", @"year_template.html"));
+            using StreamReader yearTemplateFile = new(Path.Combine(_settingsManager.PluginInstallationPath!, @"util", @"html_templates", @"year_template.html"));
 
             string exportLines = "";
 
@@ -274,13 +276,13 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
             return exportLines;
         }
 
-        private static string FillAndReturnMonthButtonTemplate(string month, string year, bool active)
+        private string FillAndReturnMonthButtonTemplate(string month, string year, bool active)
         {
             const string YEAR_MONTH_ID_PLACEHOLDER = "%%YEAR-MONTH-ID%%";
             const string MONTH_NAME_PLACEHOLDER = "%%MONTH-NAME%%";
             const string ACTIVE_PLACEHOLDER = "%%ACTIVE%%";
 
-            using StreamReader monthButtonTemplateFile = new(Path.Combine(SettingsManager.PLUGIN_PATH, @"util", @"html_templates", @"month_button_template.html"));
+            using StreamReader monthButtonTemplateFile = new(Path.Combine(_settingsManager.PluginInstallationPath!, @"util", @"html_templates", @"month_button_template.html"));
 
             string exportLines = "";
 
@@ -297,7 +299,7 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
             return exportLines;
         }
 
-        private static string FillAndReturnMonthTemplate(Dictionary<DateOnly, List<SummaryEntry>> summaryEntries, string month, string year, bool active)
+        private string FillAndReturnMonthTemplate(Dictionary<DateOnly, List<SummaryEntry>> summaryEntries, string month, string year, bool active)
         {
             const string YEAR_MONTH_ID_PLACEHOLDER = "%%YEAR-MONTH-ID%%";
             const string DATE_PLACEHOLDER = "%%DATE-TEMPLATE%%";
@@ -305,7 +307,7 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
 
             HashSet<DateOnly> dates = GetDatesFromListByYearAndMonth([.. summaryEntries.Keys], year, month);
 
-            using StreamReader monthTemplateFile = new(Path.Combine(SettingsManager.PLUGIN_PATH, @"util", @"html_templates", @"month_template.html"));
+            using StreamReader monthTemplateFile = new(Path.Combine(_settingsManager.PluginInstallationPath!, @"util", @"html_templates", @"month_template.html"));
 
             string exportLines = "";
 
@@ -326,7 +328,7 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
             return exportLines;
         }
 
-        private static string FillAndReturnDateTemplate(DateOnly date, List<SummaryEntry> summaryEntries, bool active)
+        private string FillAndReturnDateTemplate(DateOnly date, List<SummaryEntry> summaryEntries, bool active)
         {
             const string DATE_ID_PLACEHOLDER = "%%DATE-ID%%";
             const string DATE_NAME_PLACEHOLDER = "%%DATE-NAME%%";
@@ -336,7 +338,7 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
 
             TimeSpan? totalDuration = summaryEntries.Select(entry => entry.Duration).Aggregate((a, b) => a?.Add(b ?? TimeSpan.Zero) ?? b?.Add(a ?? TimeSpan.Zero));
 
-            using StreamReader dateTemplateFile = new(Path.Combine(SettingsManager.PLUGIN_PATH, @"util", @"html_templates", @"date_template.html"));
+            using StreamReader dateTemplateFile = new(Path.Combine(_settingsManager.PluginInstallationPath!, @"util", @"html_templates", @"date_template.html"));
 
             string exportLines = "";
 

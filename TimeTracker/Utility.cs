@@ -2,7 +2,7 @@ using System;
 
 namespace Community.Powertoys.Run.Plugin.TimeTracker
 {
-    public class Utility
+    public static class Utility
     {
         public class TrackerEntry(string name)
         {
