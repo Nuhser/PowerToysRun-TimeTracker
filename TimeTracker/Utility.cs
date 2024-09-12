@@ -4,13 +4,6 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
 {
     public static class Utility
     {
-        public class TrackerEntry(string name)
-        {
-            public string Name { get; set; } = name;
-            public DateTime Start { get; set; } = DateTime.Now;
-            public DateTime? End { get; set; } = null;
-        }
-        
         public static string GetDurationAsString(TimeSpan? duration)
         {
             if (duration == null)

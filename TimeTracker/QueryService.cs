@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Input;
@@ -16,11 +15,10 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
     {
         private const string COPY_GLYPH = "\xE8C8";
 
-        private readonly JsonSerializerOptions JSON_SERIALIZER_OPTIONS = new() { WriteIndented = true };
         private readonly SettingsManager _settingsManager = settingsManager;
         private readonly ExportService _exportService = exportService;
 
-        private Dictionary<DateOnly, List<TrackerEntry>>? _trackerEntries = [];
+        private Data? _data = null;
         private bool _jsonBroken = false;
 
         public List<Result> CheckQueryAndReturnResults(string queryString)
@@ -62,7 +60,7 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
                                 : "Starts a new task named '" + queryString + "'.",
                         IconName = "start.png",
                         Action = (queryString) => {
-                            List<TrackerEntry> stoppedTasks = AddEndTimeToAllRunningTasks();
+                            List<(string, TimeSpan?)> stoppedTasks = AddEndTimeToAllRunningTasks();
                             AddNewTrackerEntry(queryString);
                             ShowNotificationsForStoppedAndStartedTasks(stoppedTasks, queryString);
                         }
@@ -70,7 +68,7 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
                     new() {
                         AdditionalChecks = (queryString) =>
                             string.IsNullOrWhiteSpace(queryString) &&
-                            _trackerEntries?.Count > 0,
+                            _data?.TrackerEntries.Count > 0,
                         Title = "Show Time Tracker Summary",
                         IconName = "summary.png",
                         Action = (_) => CreateAndOpenTimeTrackerSummary()
@@ -99,22 +97,18 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
         {
             if (!File.Exists(SettingsManager.DATA_PATH))
             {
-                _trackerEntries = [];
-                string jsonString = JsonSerializer.Serialize(_trackerEntries);
-                File.WriteAllText(SettingsManager.DATA_PATH, jsonString);
+                _data = new Data();
+                _data.ToJson();
 
                 _jsonBroken = false;
             }
             else
             {
-                try
+                if ((_data = Data.FromJson()) != null)
                 {
-                    string jsonString = File.ReadAllText(SettingsManager.DATA_PATH);
-                    _trackerEntries = JsonSerializer.Deserialize<Dictionary<DateOnly, List<TrackerEntry>>>(jsonString);
-
                     _jsonBroken = false;
                 }
-                catch (JsonException)
+                else
                 {
                     if (!_jsonBroken)
                     {
@@ -139,64 +133,49 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
                 }
             }
         }
-
-        private void WriteTrackerEntriesToFile()
-        {
-            string jsonString = JsonSerializer.Serialize(_trackerEntries, JSON_SERIALIZER_OPTIONS);
-            File.WriteAllText(SettingsManager.DATA_PATH, jsonString);
-        }
-
         private void AddNewTrackerEntry(string name)
         {
-            if (!_trackerEntries?.ContainsKey(DateOnly.FromDateTime(DateTime.Now)) ?? true)
-            {
-                _trackerEntries?.Add(DateOnly.FromDateTime(DateTime.Now), [new TrackerEntry(name)]);
-            }
-            else
-            {
-                _trackerEntries?[DateOnly.FromDateTime(DateTime.Now)].Add(new TrackerEntry(name));
-            }
-
-            WriteTrackerEntriesToFile();
+            _data?.AddTrackerEntry(name);
         }
 
-        private List<TrackerEntry> AddEndTimeToAllRunningTasks()
+        private List<(string, TimeSpan?)> AddEndTimeToAllRunningTasks()
         {
-            List<TrackerEntry> stoppedTasks = [];
+            List<(string, TimeSpan?)> stoppedTasks = [];
 
-            if (_trackerEntries != null)
+            if (_data != null)
             {
-                foreach (var entryList in _trackerEntries.Values)
+                foreach (var entryList in _data.TrackerEntries.Values)
                 {
-                    entryList
-                        .Where(entry => entry.End == null)
-                        .ToList()
-                        .ForEach(entry =>
-                        {
-                            entry.End = DateTime.Now;
-                            stoppedTasks.Add(entry);
-                        });
+                    entryList.ForEach(entry => {
+                        entry.SubEntries
+                            .Where(subEntry => subEntry.End == null)
+                            .ToList()
+                            .ForEach(subEntry =>
+                            {
+                                subEntry.End = DateTime.Now;
+                                stoppedTasks.Add((entry.Name, subEntry.Duration));
+                            });
+                    });
                 }
 
-                WriteTrackerEntriesToFile();
+                _data.ToJson();
             }
 
             return stoppedTasks;
         }
 
-        private void ShowNotificationsForStoppedAndStartedTasks(List<TrackerEntry> stoppedTasks, string? newTasksName)
+        private void ShowNotificationsForStoppedAndStartedTasks(List<(string, TimeSpan?)> stoppedTasks, string? newTasksName)
         {
             if (_settingsManager.ShowNotificationsSetting.Value)
             {
                 if (stoppedTasks.Count > 0)
                 {
-                    TrackerEntry stoppedTask = stoppedTasks.First();
-                    TimeSpan? duration = stoppedTask.End - stoppedTask.Start;
+                    (string stoppedTaskName, TimeSpan? stoppedTaskDuration) = stoppedTasks.First();
 
                     if (newTasksName == null)
                     {
                         MessageBox.Show(
-                            "Stopped task '" + stoppedTask.Name + "' after " + GetDurationAsString(duration) + ".",
+                            "Stopped task '" + stoppedTaskName + "' after " + GetDurationAsString(stoppedTaskDuration) + ".",
                             "Task Stopped",
                             MessageBoxButton.OK,
                             MessageBoxImage.Information
@@ -205,7 +184,7 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
                     else
                     {
                         MessageBox.Show(
-                            "Stopped task '" + stoppedTask.Name + "' after " + GetDurationAsString(duration) + ".\nStarted task named '" + newTasksName + "'.",
+                            "Stopped task '" + stoppedTaskName + "' after " + GetDurationAsString(stoppedTaskDuration) + ".\nStarted task named '" + newTasksName + "'.",
                             "Task Stopped & New Task Started",
                             MessageBoxButton.OK,
                             MessageBoxImage.Information
@@ -226,10 +205,10 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
 
         private string? GetRunningTasksName()
         {
-            if (_trackerEntries?.ContainsKey(DateOnly.FromDateTime(DateTime.Now)) ?? false)
+            if (_data?.TrackerEntries.ContainsKey(DateOnly.FromDateTime(DateTime.Now)) ?? false)
             {
-                return _trackerEntries?[DateOnly.FromDateTime(DateTime.Now)]
-                    .Where(entry => entry.End == null)
+                return _data?.TrackerEntries[DateOnly.FromDateTime(DateTime.Now)]
+                    .Where(entry => entry.Running)
                     .FirstOrDefault()?.Name;
             }
 
@@ -238,9 +217,13 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
 
         private int GetNumberOfCurrentRunningTasks()
         {
-            if (_trackerEntries?.ContainsKey(DateOnly.FromDateTime(DateTime.Now)) ?? false)
+            if (_data?.TrackerEntries.ContainsKey(DateOnly.FromDateTime(DateTime.Now)) ?? false)
             {
-                return _trackerEntries?[DateOnly.FromDateTime(DateTime.Now)].Where(entry => entry.End == null).Count() ?? 0;
+                return _data?
+                    .TrackerEntries[DateOnly.FromDateTime(DateTime.Now)]
+                    .Where(entry => entry.Running)
+                    .Count()
+                    ?? 0;
             }
 
             return 0;
@@ -258,13 +241,13 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
             switch (_settingsManager.SummaryExportTypeSetting.SelectedOption)
             {
                 case (int)SettingsManager.SummaryExportType.CSV:
-                    exportFile = ExportService.ExportToCSV(_trackerEntries);
+                    exportFile = _exportService.ExportToCSV(_data?.TrackerEntries);
                     break;
                 case (int)SettingsManager.SummaryExportType.Markdown:
-                    exportFile = ExportService.ExportToMarkdown(_trackerEntries);
+                    exportFile = _exportService.ExportToMarkdown(_data?.TrackerEntries);
                     break;
                 case (int)SettingsManager.SummaryExportType.HTML:
-                    exportFile = _exportService.ExportToHTML(_trackerEntries, _settingsManager.HtmlExportTheme!);
+                    exportFile = _exportService.ExportToHTML(_data?.TrackerEntries, _settingsManager.HtmlExportTheme!);
                     break;
             }
 

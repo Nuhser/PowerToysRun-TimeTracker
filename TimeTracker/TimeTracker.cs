@@ -2,10 +2,8 @@
 using Microsoft.PowerToys.Settings.UI.Library;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Windows.Controls;
 using Wox.Plugin;
-using Wox.Plugin.Logger;
 
 namespace Community.Powertoys.Run.Plugin.TimeTracker
 {
