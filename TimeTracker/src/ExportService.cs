@@ -141,10 +141,6 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
             const string YEAR_BUTTON_PLACEHOLDER = "%%YEAR-BUTTON-TEMPLATE%%";
             const string YEAR_PLACEHOLDER = "%%YEAR-TEMPLATE%%";
             const string THEME_PLACEHOLDER = "%%THEME%%";
-            const string COLOR_THEME_PLACEHOLDER = "%%COLOR-THEME%%";
-
-            const string DARK_COLORS = @"color: #dee2e6;
-            background: #46484A;";
 
             HashSet<string> years = GetYearsFromDateList([.. trackerEntries.Keys]);
 
@@ -162,9 +158,6 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
                         break;
                     case YEAR_PLACEHOLDER:
                         years.ToList().ForEach(year => exportLines += FillAndReturnYearTemplate(trackerEntries, year, year == years.Last()));
-                        break;
-                    case COLOR_THEME_PLACEHOLDER:
-                        exportLines += theme == "dark" ? DARK_COLORS : "";
                         break;
                     default:
                         exportLines += line.Replace(THEME_PLACEHOLDER, theme);

@@ -20,9 +20,17 @@
     <!-- Style -->
     <style>
         body {
-            %%COLOR-THEME%%
             height: 100%;
             margin: 15px 20px 0;
+        }
+
+        body.dark {
+            color: #dee2e6;
+            background: #46484A;
+        }
+
+        body.light {
+            background: #f9f0f1;
         }
 
         .material-icons {
@@ -60,7 +68,7 @@
     </style>
 </head>
 
-<body>
+<body class="%%THEME%%">
     <h1 class="mb-3">Time Tracker Summary</h1>
 
     <div class="d-flex align-items-start" data-bs-theme="%%THEME%%">
