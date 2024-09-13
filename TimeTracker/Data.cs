@@ -98,6 +98,30 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
             ToJson();
         }
 
+        public bool IsTaskRunning()
+        {
+            return TrackerEntries.Any(day => day.Value.Any(entry => entry.Running));
+        }
+
+        public int GetNumberOfRunningTasks()
+        {
+            return TrackerEntries
+                .Select(day => day.Value)
+                .Aggregate((a, b) => [.. a, .. b])
+                .Where(entry => entry.Running)
+                .Count();
+        }
+
+        public string? GetNameOfRunningTask()
+        {
+            IEnumerable<TrackerEntry> list = TrackerEntries
+                .Select(day => day.Value)
+                .Aggregate((a, b) => [.. a, .. b])
+                .Where(entry => entry.Running);
+
+            return list.Any() ? list.Last().Name : null;
+        }
+
         public static Data? FromJson()
         {
             try

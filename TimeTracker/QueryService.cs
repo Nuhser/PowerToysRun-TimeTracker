@@ -39,12 +39,12 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
                     new() {
                         AdditionalChecks = (queryString) =>
                             string.IsNullOrWhiteSpace(queryString) &&
-                            IsRunningTaskPresent(),
+                            (_data?.IsTaskRunning() ?? false),
                         Title = "Stop Currently Running Task",
                         Description =
-                            GetNumberOfCurrentRunningTasks() > 1
+                            _data?.GetNumberOfRunningTasks() > 1
                                 ? "Stops all currently running tasks."
-                                : "Stops the currently running task '" + GetRunningTasksName() + "'.",
+                                : "Stops the currently running task '" + _data?.GetNameOfRunningTask() + "'.",
                         IconName = "stop.png",
                         Action = (_) => ShowNotificationsForStoppedAndStartedTasks(AddEndTimeToAllRunningTasks(), null)
                     },
@@ -53,15 +53,15 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
                             !string.IsNullOrWhiteSpace(queryString),
                         Title = "Start New Task",
                         Description =
-                            IsRunningTaskPresent()
-                                ? GetNumberOfCurrentRunningTasks() > 1
+                            (_data?.IsTaskRunning() ?? false)
+                                ? _data?.GetNumberOfRunningTasks() > 1
                                     ? "Stops currently running tasks and starts a new one named '" + queryString + "'."
-                                    : "Stops the currently running task '" + GetRunningTasksName() + "' and starts a new one named '" + queryString + "'."
+                                    : "Stops the currently running task '" + _data?.GetNameOfRunningTask() + "' and starts a new one named '" + queryString + "'."
                                 : "Starts a new task named '" + queryString + "'.",
                         IconName = "start.png",
                         Action = (queryString) => {
                             List<(string, TimeSpan?)> stoppedTasks = AddEndTimeToAllRunningTasks();
-                            AddNewTrackerEntry(queryString);
+                            _data?.AddTrackerEntry(queryString);
                             ShowNotificationsForStoppedAndStartedTasks(stoppedTasks, queryString);
                         }
                     },
@@ -133,10 +133,6 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
                 }
             }
         }
-        private void AddNewTrackerEntry(string name)
-        {
-            _data?.AddTrackerEntry(name);
-        }
 
         private List<(string, TimeSpan?)> AddEndTimeToAllRunningTasks()
         {
@@ -201,37 +197,6 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
                     );
                 }
             }
-        }
-
-        private string? GetRunningTasksName()
-        {
-            if (_data?.TrackerEntries.ContainsKey(DateOnly.FromDateTime(DateTime.Now)) ?? false)
-            {
-                return _data?.TrackerEntries[DateOnly.FromDateTime(DateTime.Now)]
-                    .Where(entry => entry.Running)
-                    .FirstOrDefault()?.Name;
-            }
-
-            return null;
-        }
-
-        private int GetNumberOfCurrentRunningTasks()
-        {
-            if (_data?.TrackerEntries.ContainsKey(DateOnly.FromDateTime(DateTime.Now)) ?? false)
-            {
-                return _data?
-                    .TrackerEntries[DateOnly.FromDateTime(DateTime.Now)]
-                    .Where(entry => entry.Running)
-                    .Count()
-                    ?? 0;
-            }
-
-            return 0;
-        }
-
-        private bool IsRunningTaskPresent()
-        {
-            return GetNumberOfCurrentRunningTasks() > 0;
         }
 
         private void CreateAndOpenTimeTrackerSummary()
