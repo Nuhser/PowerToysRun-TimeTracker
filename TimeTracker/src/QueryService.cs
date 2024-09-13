@@ -135,7 +135,7 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
                             .ForEach(subEntry =>
                             {
                                 subEntry.End = DateTime.Now;
-                                stoppedTasks.Add((entry.Name, subEntry.Duration));
+                                stoppedTasks.Add((entry.Name, subEntry.GetDuration()));
                             });
                     });
                 }
@@ -221,7 +221,7 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
                     exportFile = _exportService.ExportToMarkdown(_data?.TrackerEntries);
                     break;
                 case (int)SettingsManager.SummaryExportType.HTML:
-                    exportFile = _exportService.ExportToHTML(_data?.TrackerEntries, _settingsManager.HtmlExportTheme!);
+                    exportFile = _exportService.ExportToHTML(_data, _settingsManager.HtmlExportTheme!);
                     break;
             }
 

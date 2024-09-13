@@ -38,7 +38,7 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
 
             foreach (var day in trackerEntries ?? [])
             {
-                TimeSpan? totalDuration = day.Value.Select(entry => entry.Duration).Aggregate((a, b) => a?.Add(b ?? TimeSpan.Zero) ?? b?.Add(a ?? TimeSpan.Zero));
+                TimeSpan? totalDuration = day.Value.Select(entry => entry.GetDuration(true)).Aggregate((a, b) => a?.Add(b ?? TimeSpan.Zero) ?? b?.Add(a ?? TimeSpan.Zero));
 
                 exportFile.WriteLine("## " + day.Key.ToString("dddd, d. MMMM yyyy") + ((totalDuration != null) ? (" (Total: " + GetDurationAsString(totalDuration) + ")") : ""));
                 exportFile.WriteLine();
@@ -55,7 +55,7 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
                         "|" +
                         (task.GetEnd()?.ToString("HH:mm") ?? " ") +
                         "|" +
-                        GetDurationAsString(task.Duration) +
+                        GetDurationAsString(task.GetDuration(true)) +
                         "|"
                     );
 
@@ -69,7 +69,7 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
                                 "|" +
                                 (child.End?.ToString("HH:mm") ?? " ") +
                                 "|" +
-                                GetDurationAsString(child.Duration) +
+                                GetDurationAsString(child.GetDuration(true)) +
                                 "|"
                             );
                         }
@@ -101,7 +101,7 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
                         task.Name,
                         (task.GetStart()?.ToString("HH:mm") ?? ""),
                         (task.GetEnd()?.ToString("HH:mm") ?? ""),
-                        GetDurationAsString(task.Duration)
+                        GetDurationAsString(task.GetDuration(true))
                     ]));
 
                     if (task.HasSubEntries())
@@ -113,7 +113,7 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
                             "",
                             (child.Start.ToString("HH:mm") ?? ""),
                             (child.End?.ToString("HH:mm") ?? ""),
-                            GetDurationAsString(child.Duration)
+                            GetDurationAsString(child.GetDuration(true))
                             ]));
                         }
                     }
@@ -124,25 +124,25 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
         }
 
         public string ExportToHTML(
-            Dictionary<DateOnly, List<Data.TrackerEntry>>? trackerEntries,
+            Data? data,
             string theme
         )
         {
             string exportFileName = Path.Combine(_settingsManager.PluginInstallationPath!, @"summary.html");
             using StreamWriter exportFile = new(exportFileName);
 
-            exportFile.WriteLine(FillAndReturnSummaryTemplate(trackerEntries ?? [], theme));
+            exportFile.WriteLine(FillAndReturnSummaryTemplate(data, theme));
 
             return exportFileName;
         }
 
-        private string FillAndReturnSummaryTemplate(Dictionary<DateOnly, List<Data.TrackerEntry>> trackerEntries, string theme)
+        private string FillAndReturnSummaryTemplate(Data? data, string theme)
         {
             const string YEAR_BUTTON_PLACEHOLDER = "%%YEAR-BUTTON-TEMPLATE%%";
             const string YEAR_PLACEHOLDER = "%%YEAR-TEMPLATE%%";
             const string THEME_PLACEHOLDER = "%%THEME%%";
 
-            HashSet<string> years = GetYearsFromDateList([.. trackerEntries.Keys]);
+            HashSet<string> years = GetYearsFromDateList([.. data?.TrackerEntries.Keys]);
 
             using StreamReader summaryTemplateFile = new(Path.Combine(_settingsManager.PluginInstallationPath!, @"util", @"html_templates", @"summary_template.html"));
 
@@ -157,7 +157,7 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
                         years.ToList().ForEach(year => exportLines += FillAndReturnYearButtonTemplate(year, year == years.Last()));
                         break;
                     case YEAR_PLACEHOLDER:
-                        years.ToList().ForEach(year => exportLines += FillAndReturnYearTemplate(trackerEntries, year, year == years.Last()));
+                        years.ToList().ForEach(year => exportLines += FillAndReturnYearTemplate(data, year, year == years.Last()));
                         break;
                     default:
                         exportLines += line.Replace(THEME_PLACEHOLDER, theme);
@@ -190,14 +190,14 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
             return exportLines;
         }
 
-        private string FillAndReturnYearTemplate(Dictionary<DateOnly, List<Data.TrackerEntry>> trackerEntries, string year, bool active)
+        private string FillAndReturnYearTemplate(Data? data, string year, bool active)
         {
             const string YEAR_ID_PLACEHOLDER = "%%YEAR-ID%%";
             const string MONTH_BUTTON_PLACEHOLDER = "%%MONTH-BUTTON-TEMPLATE%%";
             const string MONTH_PLACEHOLDER = "%%MONTH-TEMPLATE%%";
             const string SHOW_ACTIVE_PLACEHOLDER = "%%SHOW-ACTIVE%%";
 
-            HashSet<string> months = GetMonthsFromDateListByYear([.. trackerEntries.Keys], year);
+            HashSet<string> months = GetMonthsFromDateListByYear([.. data?.TrackerEntries.Keys], year);
 
             using StreamReader yearTemplateFile = new(Path.Combine(_settingsManager.PluginInstallationPath!, @"util", @"html_templates", @"year_template.html"));
 
@@ -212,7 +212,7 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
                         months.ToList().ForEach(month => exportLines += FillAndReturnMonthButtonTemplate(month, year, (active && month == months.Last()) || (!active && month == months.First())));
                         break;
                     case MONTH_PLACEHOLDER:
-                        months.ToList().ForEach(month => exportLines += FillAndReturnMonthTemplate(trackerEntries, month, year, (active && month == months.Last()) || (!active && month == months.First())));
+                        months.ToList().ForEach(month => exportLines += FillAndReturnMonthTemplate(data, month, year, (active && month == months.Last()) || (!active && month == months.First())));
                         break;
                     default:
                         exportLines += line
@@ -248,13 +248,13 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
             return exportLines;
         }
 
-        private string FillAndReturnMonthTemplate(Dictionary<DateOnly, List<Data.TrackerEntry>> trackerEntries, string month, string year, bool active)
+        private string FillAndReturnMonthTemplate(Data? data, string month, string year, bool active)
         {
             const string YEAR_MONTH_ID_PLACEHOLDER = "%%YEAR-MONTH-ID%%";
             const string DATE_PLACEHOLDER = "%%DATE-TEMPLATE%%";
             const string SHOW_ACTIVE_PLACEHOLDER = "%%SHOW-ACTIVE%%";
 
-            HashSet<DateOnly> dates = GetDatesFromListByYearAndMonth([.. trackerEntries.Keys], year, month);
+            HashSet<DateOnly> dates = GetDatesFromListByYearAndMonth([.. data?.TrackerEntries.Keys], year, month);
 
             using StreamReader monthTemplateFile = new(Path.Combine(_settingsManager.PluginInstallationPath!, @"util", @"html_templates", @"month_template.html"));
 
@@ -266,7 +266,7 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
                 switch (line.Trim())
                 {
                     case DATE_PLACEHOLDER:
-                        dates.ToList().ForEach(date => exportLines += FillAndReturnDateTemplate(date, trackerEntries[date], active && date == dates.Last()));
+                        dates.ToList().ForEach(date => exportLines += FillAndReturnDateTemplate(date, data, active && date == dates.Last()));
                         break;
                     default:
                         exportLines += line.Replace(YEAR_MONTH_ID_PLACEHOLDER, string.Join("-", [year, month])).Replace(SHOW_ACTIVE_PLACEHOLDER, active ? "show active" : "");
@@ -277,7 +277,7 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
             return exportLines;
         }
 
-        private string FillAndReturnDateTemplate(DateOnly date, List<Data.TrackerEntry> trackerEntries, bool active)
+        private string FillAndReturnDateTemplate(DateOnly date, Data? data, bool active)
         {
             const string DATE_ID_PLACEHOLDER = "%%DATE-ID%%";
             const string DATE_NAME_PLACEHOLDER = "%%DATE-NAME%%";
@@ -285,7 +285,7 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
             const string SHOW_PLACEHOLDER = "%%SHOW%%";
             const string COLLAPSED_PLACEHOLDER = "%%COLLAPSED%%";
 
-            TimeSpan? totalDuration = trackerEntries.Select(entry => entry.Duration).Aggregate((a, b) => a?.Add(b ?? TimeSpan.Zero) ?? b?.Add(a ?? TimeSpan.Zero));
+            TimeSpan? totalDuration = data?.GetTotalDurationForDay(date, true);
 
             using StreamReader dateTemplateFile = new(Path.Combine(_settingsManager.PluginInstallationPath!, @"util", @"html_templates", @"date_template.html"));
 
@@ -297,17 +297,26 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
                 switch (line.Trim())
                 {
                     case DATE_NAME_PLACEHOLDER:
-                        exportLines += date.ToString("dddd, d. MMMM yyyy") + ((totalDuration != null) ? (" (Total: " + GetDurationAsString(totalDuration) + ")") : "") + "\n";
+                        exportLines += date.ToString("dddd, d. MMMM yyyy") +
+                        ((totalDuration != null)
+                            ? (" (Total: " +
+                                GetDurationAsString(totalDuration) +
+                                ((data?.IsTaskRunningForDate(date) ?? false) ? "<span class='material-symbols-outlined ms-2'>acute</span>" : "") +
+                                ")")
+                            : "") +
+                        "\n";
                         break;
                     case TABLE_ENTRIES_PLACEHOLDER:
-                        trackerEntries.ForEach(entry =>
+                        data?.TrackerEntries[date].ForEach(entry =>
                         {
                             exportLines += "<tr>";
                             exportLines += "<td>" + entry.Name + "</td>";
                             exportLines += "<td>" + (entry.GetStart()?.ToString("HH:mm") ?? "") + "</td>";
                             exportLines += "<td>" + (entry.GetEnd()?.ToString("HH:mm") ?? "") + "</td>";
                             exportLines +=
-                                "<td>" + GetDurationAsString(entry.Duration) +
+                                "<td>" +
+                                GetDurationAsString(entry.GetDuration(true)) +
+                                (entry.Running ? "<span class='material-symbols-outlined ms-2'>acute</span>" : "") +
                                 "</td>";
                             exportLines += "</tr>";
 
@@ -320,7 +329,9 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
                                     exportLines += "<td>" + (child.Start.ToString("HH:mm") ?? "") + "</td>";
                                     exportLines += "<td>" + (child.End?.ToString("HH:mm") ?? "") + "</td>";
                                     exportLines +=
-                                        "<td>" + GetDurationAsString(child.Duration) +
+                                        "<td>" +
+                                        GetDurationAsString(child.GetDuration(true)) +
+                                        (child.Running ? "<span class='material-symbols-outlined ms-2'>acute</span>" : "") +
                                         "</td>";
                                     exportLines += "</tr>";
                                 }

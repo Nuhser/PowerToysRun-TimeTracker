@@ -25,12 +25,14 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
             public List<TrackerSubEntries> SubEntries { get; set; } = [new TrackerSubEntries()];
 
             [JsonIgnore]
-            public TimeSpan? Duration => SubEntries
-                .Select(subEntry => subEntry.Duration)
-                .Aggregate((a, b) => a?.Add(b ?? TimeSpan.Zero) ?? b?.Add(a ?? TimeSpan.Zero));
-
-            [JsonIgnore]
             public bool Running => SubEntries.Any(subEntry => subEntry.Running);
+
+            public TimeSpan? GetDuration(bool includeRunning = false)
+            {
+                return SubEntries
+                .Select(subEntry => subEntry.GetDuration(includeRunning))
+                .Aggregate((a, b) => a?.Add(b ?? TimeSpan.Zero) ?? b?.Add(a ?? TimeSpan.Zero));
+            }
 
             public bool HasSubEntries()
             {
@@ -64,9 +66,12 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
             public DateTime? End { get; set; } = null;
 
             [JsonIgnore]
-            public TimeSpan? Duration => (End != null) ? End - Start : null;
-            [JsonIgnore]
             public bool Running => End == null;
+
+            public TimeSpan? GetDuration(bool includeRunning = false)
+            {
+                return End?.Subtract(Start) ?? (includeRunning ? DateTime.Now.Subtract(Start) : null);
+            }
         }
 
         // properties
@@ -127,6 +132,18 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
         public string GetNamesOfRunningTasksAsString()
         {
             return string.Join(", ", GetNamesOfRunningTask().Select(name => "'" + name + "'").ToList());
+        }
+
+        public bool IsTaskRunningForDate(DateOnly date)
+        {
+            return TrackerEntries[date].Any(entry => entry.Running);
+        }
+
+        public TimeSpan? GetTotalDurationForDay(DateOnly date, bool includeRunning = false)
+        {
+            return TrackerEntries[date]
+                .Select(entry => entry.GetDuration(includeRunning))
+                .Aggregate((a, b) => a?.Add(b ?? TimeSpan.Zero) ?? b?.Add(a ?? TimeSpan.Zero));
         }
 
         public static bool FromJson(out Data? data)
