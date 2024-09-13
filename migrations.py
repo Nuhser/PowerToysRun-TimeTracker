@@ -1,5 +1,6 @@
 import json
 import os
+import shutil
 import sys
 
 def migrateToV1_0_1(data):
@@ -31,11 +32,12 @@ def migrateToV1_0_1(data):
     return data
 
 if __name__ == "__main__":
-    data_file_path: str = os.path.join(
+    data_directory_path: str = os.path.join(
         str(os.getenv("LOCALAPPDATA")),
-        "Microsoft\\PowerToys\\PowerToys Run\\Settings\\Plugins\\Community.PowerToys.Run.Plugin.TimeTracker",
-        "data.json"
+        "Microsoft\\PowerToys\\PowerToys Run\\Settings\\Plugins\\Community.PowerToys.Run.Plugin.TimeTracker"
     )
+    data_file_path: str = os.path.join(data_directory_path, "data.json")
+    data_backup_file_path: str = os.path.join(data_directory_path, "data.json.backup")
 
     print(data_file_path)
 
@@ -43,6 +45,10 @@ if __name__ == "__main__":
         print("No data-file found. Migration aborted.\n")
         input("Press ENTER to continue...")
         sys.exit()
+
+    if (os.path.isfile(data_backup_file_path)):
+        os.remove(data_backup_file_path)
+    shutil.copyfile(data_file_path, data_backup_file_path)
 
     with open(data_file_path, "r") as data_file:
         data = json.loads(data_file.read())
