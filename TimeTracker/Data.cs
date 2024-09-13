@@ -30,7 +30,7 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
                 .Aggregate((a, b) => a?.Add(b ?? TimeSpan.Zero) ?? b?.Add(a ?? TimeSpan.Zero));
 
             [JsonIgnore]
-            public bool Running => SubEntries.Any(subEntry => subEntry.End == null);
+            public bool Running => SubEntries.Any(subEntry => subEntry.Running);
 
             public bool HasSubEntries()
             {
@@ -65,6 +65,8 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
 
             [JsonIgnore]
             public TimeSpan? Duration => (End != null) ? End - Start : null;
+            [JsonIgnore]
+            public bool Running => End == null;
         }
 
         // properties

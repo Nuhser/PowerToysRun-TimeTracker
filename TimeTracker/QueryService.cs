@@ -130,7 +130,7 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
                     entryList.ForEach(entry =>
                     {
                         entry.SubEntries
-                            .Where(subEntry => subEntry.End == null)
+                            .Where(subEntry => subEntry.Running)
                             .ToList()
                             .ForEach(subEntry =>
                             {
