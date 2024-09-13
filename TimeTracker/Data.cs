@@ -122,25 +122,33 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
             return runningEntries.Any() ? runningEntries.Last().Name : null;
         }
 
-        public static Data? FromJson()
+        public static bool FromJson(out Data? data)
         {
+            if (!File.Exists(SettingsManager.DATA_PATH))
+            {
+                data = new Data();
+                data.ToJson();
+                return true;
+            }
+
             try
             {
                 string jsonString = File.ReadAllText(SettingsManager.DATA_PATH);
-                var data = JsonSerializer.Deserialize<Data>(jsonString);
+                data = JsonSerializer.Deserialize<Data>(jsonString);
 
-                if (data != null)
+                if (data == null)
                 {
-                    return data;
+                    Log.Error(SettingsManager.DATA_PATH + " was read but didn't contain any data content.", typeof(Data));
+                    return false;
                 }
 
-                Log.Error(SettingsManager.DATA_PATH + " was read but didn't contain any data content.", typeof(Data));
-                return null;
+                return true;
             }
             catch (JsonException)
             {
                 Log.Error(SettingsManager.DATA_PATH + " couldn't be read or didn't contain a valid JSON.", typeof(Data));
-                return null;
+                data = null;
+                return false;
             }
         }
 

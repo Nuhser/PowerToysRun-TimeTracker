@@ -95,40 +95,30 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
 
         private void ReadTrackerEntriesFromFile()
         {
-            if (!File.Exists(SettingsManager.DATA_PATH))
+            if (Data.FromJson(out _data))
             {
-                _data = new Data();
-                _data.ToJson();
-
                 _jsonBroken = false;
             }
             else
             {
-                if ((_data = Data.FromJson()) != null)
+                if (!_jsonBroken)
                 {
-                    _jsonBroken = false;
-                }
-                else
-                {
-                    if (!_jsonBroken)
-                    {
-                        _jsonBroken = true;
+                    _jsonBroken = true;
 
-                        if (MessageBoxResult.Yes == MessageBox.Show(
-                            "The JSON containing your tracker data seems to be broken and needs fixing.\nDo you wan't to fix it now?",
-                            "Data-JSON Needs Repair",
-                            MessageBoxButton.YesNo,
-                            MessageBoxImage.Error
+                    if (MessageBoxResult.Yes == MessageBox.Show(
+                        "The JSON containing your tracker data seems to be broken and needs fixing.\nDo you wan't to fix it now?",
+                        "Data-JSON Needs Repair",
+                        MessageBoxButton.YesNo,
+                        MessageBoxImage.Error
                         ))
-                        {
-                            Process.Start(
-                                new ProcessStartInfo
-                                {
-                                    FileName = SettingsManager.DATA_PATH,
-                                    UseShellExecute = true
-                                }
-                            );
-                        }
+                    {
+                        Process.Start(
+                            new ProcessStartInfo
+                            {
+                                FileName = SettingsManager.DATA_PATH,
+                                UseShellExecute = true
+                            }
+                        );
                     }
                 }
             }
@@ -142,7 +132,8 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
             {
                 foreach (var entryList in _data.TrackerEntries.Values)
                 {
-                    entryList.ForEach(entry => {
+                    entryList.ForEach(entry =>
+                    {
                         entry.SubEntries
                             .Where(subEntry => subEntry.End == null)
                             .ToList()
