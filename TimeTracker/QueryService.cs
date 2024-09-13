@@ -150,7 +150,7 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
         {
             if (_settingsManager.ShowNotificationsSetting.Value)
             {
-                if (stoppedTasks.Count > 0)
+                if (stoppedTasks.Count == 1)
                 {
                     (string stoppedTaskName, TimeSpan? stoppedTaskDuration) = stoppedTasks.First();
 
@@ -167,6 +167,29 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
                     {
                         MessageBox.Show(
                             "Stopped task '" + stoppedTaskName + "' after " + GetDurationAsString(stoppedTaskDuration) + ".\nStarted task named '" + newTasksName + "'.",
+                            "Task Stopped & New Task Started",
+                            MessageBoxButton.OK,
+                            MessageBoxImage.Information
+                        );
+                    }
+                }
+                else if (stoppedTasks.Count > 1)
+                {
+                    string stoppedTasksNames = string.Join(", ", stoppedTasks.Select((name, _) => "'" + name + "'"));
+
+                    if (newTasksName == null)
+                    {
+                        MessageBox.Show(
+                            "Stopped tasks " + stoppedTasksNames + ".",
+                            "Task Stopped",
+                            MessageBoxButton.OK,
+                            MessageBoxImage.Information
+                        );
+                    }
+                    else
+                    {
+                        MessageBox.Show(
+                            "Stopped tasks '" + stoppedTasksNames + ".\nStarted task named '" + newTasksName + "'.",
                             "Task Stopped & New Task Started",
                             MessageBoxButton.OK,
                             MessageBoxImage.Information
