@@ -7,15 +7,12 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TimeTracker", "..\TimeTrack
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
-		Debug|x64 = Debug|x64
 		Release|x64 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{A2A27C1C-DD02-41A5-A6C5-E727646841A9}.Debug|x64.ActiveCfg = Debug|x64
-		{A2A27C1C-DD02-41A5-A6C5-E727646841A9}.Debug|x64.Build.0 = Debug|x64
 		{A2A27C1C-DD02-41A5-A6C5-E727646841A9}.Release|x64.ActiveCfg = Release|x64
 		{A2A27C1C-DD02-41A5-A6C5-E727646841A9}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
