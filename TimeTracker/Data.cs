@@ -89,6 +89,10 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
                         .SubEntries
                         .Add(new TrackerSubEntries());
                 }
+                else
+                {
+                    TrackerEntries[key].Add(new TrackerEntry(name));
+                }
             }
 
             ToJson();
