@@ -107,19 +107,19 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
         {
             return TrackerEntries
                 .Select(day => day.Value)
-                .Aggregate((a, b) => [.. a, .. b])
+                .Aggregate(new List<TrackerEntry>(), (a, b) => [.. a, .. b])
                 .Where(entry => entry.Running)
                 .Count();
         }
 
         public string? GetNameOfRunningTask()
         {
-            IEnumerable<TrackerEntry> list = TrackerEntries
+            IEnumerable<TrackerEntry> runningEntries = TrackerEntries
                 .Select(day => day.Value)
-                .Aggregate((a, b) => [.. a, .. b])
+                .Aggregate(new List<TrackerEntry>(), (a, b) => [.. a, .. b])
                 .Where(entry => entry.Running);
 
-            return list.Any() ? list.Last().Name : null;
+            return runningEntries.Any() ? runningEntries.Last().Name : null;
         }
 
         public static Data? FromJson()
