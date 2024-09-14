@@ -219,6 +219,22 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
                 option.TextBoxMaxLength = MaxLength;
             }
         }
+
+        public class MultilineTextSetting : TextSetting
+        {
+            public override PluginAdditionalOption.AdditionalOptionType OptionType { get; } = PluginAdditionalOption.AdditionalOptionType.MultilineTextbox;
+            public List<string>? ValueAsList { get; set; }
+
+            public override void SetValue(PluginAdditionalOption option)
+            {
+                base.SetValue(option);
+                ValueAsList = option.TextValueAsMultilineList;
+            }
+
+            protected override void AddTypeSpecificOptionProperties(PluginAdditionalOption option)
+            {
+                base.AddTypeSpecificOptionProperties(option);
+                option.TextValueAsMultilineList = ValueAsList;
             }
         }
 
