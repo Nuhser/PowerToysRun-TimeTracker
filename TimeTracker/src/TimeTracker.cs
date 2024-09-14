@@ -2,7 +2,6 @@
 using Microsoft.PowerToys.Settings.UI.Library;
 using System;
 using System.Collections.Generic;
-using System.Windows;
 using System.Windows.Controls;
 using Wox.Plugin;
 
