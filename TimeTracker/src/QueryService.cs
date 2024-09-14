@@ -215,10 +215,10 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
             switch (_settingsManager.SummaryExportTypeSetting.SelectedOption)
             {
                 case (int)SettingsManager.SummaryExportType.CSV:
-                    exportFile = _exportService.ExportToCSV(_data?.TrackerEntries);
+                    exportFile = _exportService.ExportToCSV(_data);
                     break;
                 case (int)SettingsManager.SummaryExportType.Markdown:
-                    exportFile = _exportService.ExportToMarkdown(_data?.TrackerEntries);
+                    exportFile = _exportService.ExportToMarkdown(_data);
                     break;
                 case (int)SettingsManager.SummaryExportType.HTML:
                     exportFile = _exportService.ExportToHTML(_data, _settingsManager.HtmlExportTheme!);

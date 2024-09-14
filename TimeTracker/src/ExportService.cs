@@ -25,9 +25,7 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
             return dates.Where(date => date.ToString("yyyy") == year).Where(date => date.ToString("MMMM") == month).ToHashSet();
         }
 
-        public string ExportToMarkdown(
-            Dictionary<DateOnly, List<Data.TrackerEntry>>? trackerEntries
-        )
+        public string ExportToMarkdown(Data? data)
         {
             string exportFileName = Path.Combine(_settingsManager.PluginInstallationPath!, @"summary.md");
 
@@ -36,11 +34,22 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
             exportFile.WriteLine("# Time Tracker Summary");
             exportFile.WriteLine();
 
-            foreach (var day in trackerEntries ?? [])
+            foreach (var day in data?.TrackerEntries ?? [])
             {
-                TimeSpan? totalDuration = day.Value.Select(entry => entry.GetDuration(true)).Aggregate((a, b) => a?.Add(b ?? TimeSpan.Zero) ?? b?.Add(a ?? TimeSpan.Zero));
+                TimeSpan? totalDuration = data?.GetTotalDurationForDay(day.Key, true);
 
-                exportFile.WriteLine("## " + day.Key.ToString("dddd, d. MMMM yyyy") + ((totalDuration != null) ? (" (Total: " + GetDurationAsString(totalDuration) + ")") : ""));
+                exportFile.WriteLine(
+                    "## " +
+                    day.Key.ToString("dddd, d. MMMM yyyy") +
+                    ((totalDuration != null)
+                        ? (
+                            " (Total: " +
+                            ((data?.IsTaskRunningForDate(day.Key) ?? false) ? "~" : "") +
+                            GetDurationAsString(totalDuration) +
+                            ")"
+                        )
+                        : "")
+                );
                 exportFile.WriteLine();
                 exportFile.WriteLine("|Name|Start|End|Duration|");
                 exportFile.WriteLine("|-----|-----|-----|-----|");
@@ -55,6 +64,7 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
                         "|" +
                         (task.GetEnd()?.ToString("HH:mm") ?? " ") +
                         "|" +
+                        (task.Running ? "~" : "") +
                         GetDurationAsString(task.GetDuration(true)) +
                         "|"
                     );
@@ -69,6 +79,7 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
                                 "|" +
                                 (child.End?.ToString("HH:mm") ?? " ") +
                                 "|" +
+                                (child.Running ? "~" : "") +
                                 GetDurationAsString(child.GetDuration(true)) +
                                 "|"
                             );
@@ -82,9 +93,7 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
             return exportFileName;
         }
 
-        public string ExportToCSV(
-            Dictionary<DateOnly, List<Data.TrackerEntry>>? trackerEntries
-        )
+        public string ExportToCSV(Data? data)
         {
             string exportFileName = Path.Combine(_settingsManager.PluginInstallationPath!, @"summary.csv");
 
@@ -92,7 +101,7 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
 
             exportFile.WriteLine("Date,Name,Start,End,Duration");
 
-            foreach (var day in trackerEntries ?? [])
+            foreach (var day in data?.TrackerEntries ?? [])
             {
                 foreach (var task in day.Value)
                 {
@@ -101,6 +110,7 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
                         task.Name,
                         (task.GetStart()?.ToString("HH:mm") ?? ""),
                         (task.GetEnd()?.ToString("HH:mm") ?? ""),
+                        (task.Running ? "~" : "") +
                         GetDurationAsString(task.GetDuration(true))
                     ]));
 
@@ -113,6 +123,7 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
                             "",
                             (child.Start.ToString("HH:mm") ?? ""),
                             (child.End?.ToString("HH:mm") ?? ""),
+                            (child.Running ? "~" : "") +
                             GetDurationAsString(child.GetDuration(true))
                             ]));
                         }
@@ -123,10 +134,7 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
             return exportFileName;
         }
 
-        public string ExportToHTML(
-            Data? data,
-            string theme
-        )
+        public string ExportToHTML(Data? data, string theme)
         {
             string exportFileName = Path.Combine(_settingsManager.PluginInstallationPath!, @"summary.html");
             using StreamWriter exportFile = new(exportFileName);
