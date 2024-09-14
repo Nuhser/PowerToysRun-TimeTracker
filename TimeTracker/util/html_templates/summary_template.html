@@ -53,20 +53,48 @@
             --bs-table-striped-color: #bbbbbb;
             --bs-table-striped-bg: rgba(0, 0, 0, 0.15);
         }
+
+        #container {
+            min-height: 100%;
+            position: relative;
+        }
+
+        #main {
+            padding-bottom: 120px;
+        }
+
+        #footer {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            height: 100px;
+        }
     </style>
 </head>
 
-<body class="%%THEME%%">
-    <h1 class="mb-3">Time Tracker Summary</h1>
+<body class="dark">
+    <div id="container">
+        <h1 class="mb-3">Time Tracker Summary</h1>
 
-    <div class="d-flex align-items-start" data-bs-theme="%%THEME%%">
-        <div class="nav flex-column nav-pills me-3" role="tablist">
-            %%YEAR-BUTTON-TEMPLATE%%
+        <div id="header" class="mb-3" style="%%CUSTOM-HEADER-STYLE%%">
+            %%CUSTOM-HEADER%%
         </div>
 
-        <div class="tab-content flex-fill">
-            %%YEAR-TEMPLATE%%
+        <div id="main" class="d-flex align-items-start" data-bs-theme="%%THEME%%">
+            <div class="nav flex-column nav-pills me-3" role="tablist">
+                %%YEAR-BUTTON-TEMPLATE%%
+            </div>
+
+            <div class="tab-content flex-fill">
+                %%YEAR-TEMPLATE%%
+            </div>
         </div>
+
+        <footer id="footer" style="%%CUSTOM-FOOTER-STYLE%%">
+            <div>
+                %%CUSTOM-FOOTER%%
+            </div>
+        </footer>
     </div>
 
     <!-- Iconify -->
