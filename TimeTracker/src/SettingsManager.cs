@@ -185,6 +185,7 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
             public override PluginAdditionalOption.AdditionalOptionType OptionType { get; } = PluginAdditionalOption.AdditionalOptionType.Numberbox;
             public required int Value { get; set; }
             public int MinValue { get; set; }
+            public int MaxValue { get; set; }
 
             public override void SetValue(PluginAdditionalOption option)
             {
@@ -195,6 +196,7 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
             {
                 option.NumberValue = Value;
                 option.NumberBoxMin = MinValue;
+                option.NumberBoxMax = MaxValue;
             }
         }
 
