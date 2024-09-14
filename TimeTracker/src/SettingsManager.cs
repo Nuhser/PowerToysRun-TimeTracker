@@ -203,6 +203,7 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
             public override PluginAdditionalOption.AdditionalOptionType OptionType { get; } = PluginAdditionalOption.AdditionalOptionType.Textbox;
             public string? Value { get; set; }
             public string? PlaceHolder { get; set; }
+            public int? MaxLength { get; set; }
 
             public override void SetValue(PluginAdditionalOption option)
             {
@@ -213,6 +214,9 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
             {
                 option.TextValue = Value;
                 option.PlaceholderText = PlaceHolder;
+                option.TextBoxMaxLength = MaxLength;
+            }
+        }
             }
         }
 
