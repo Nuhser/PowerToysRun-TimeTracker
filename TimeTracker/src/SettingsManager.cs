@@ -86,6 +86,12 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
             Value = false
         };
 
+        public MultilineTextSetting TaskLinkRegexSettings = new()
+        {
+            Key = "task_link_regex",
+            Label = "Task Name RegEx Matching"
+        };
+
         public MultilineTextSetting CustomHtmlHeaderSetting = new()
         {
             Key = "custom_html_header",
@@ -107,6 +113,7 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
                 ShowSavesFileSetting,
                 SummaryExportTypeSetting,
                 ShowRunningDurationsSetting,
+                TaskLinkRegexSettings,
                 CustomHtmlHeaderSetting,
                 CustomHtmlFooterSetting
             ];

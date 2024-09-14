@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
+using Wox.Plugin.Logger;
 using static Community.Powertoys.Run.Plugin.TimeTracker.Utility;
 
 namespace Community.Powertoys.Run.Plugin.TimeTracker
@@ -23,6 +25,48 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
         private static HashSet<DateOnly> GetDatesFromListByYearAndMonth(List<DateOnly> dates, string year, string month)
         {
             return dates.Where(date => date.ToString("yyyy") == year).Where(date => date.ToString("MMMM") == month).ToHashSet();
+        }
+
+        private string? CheckRegexAndGetLinkForTaskName(string name)
+        {
+            if ((_settingsManager.TaskLinkRegexSettings.ValueAsList?.Count % 2) != 0)
+            {
+                Log.Warn("The number of regex and link lines in setting '" + _settingsManager.TaskLinkRegexSettings.Label + "' doesn't match. This setting's number of lines should always be an even number. The Matching will therefore be skipped.", GetType());
+                return null;
+            }
+
+            for (int i = 0; i < _settingsManager.TaskLinkRegexSettings.ValueAsList?.Count; i += 2)
+            {
+                string regex = _settingsManager.TaskLinkRegexSettings.ValueAsList?[i]!;
+                string link = _settingsManager.TaskLinkRegexSettings.ValueAsList?[i + 1]!;
+
+                if (!Uri.TryCreate(link, UriKind.Absolute, out _))
+                {
+                    Log.Warn("The link '" + link + "' from the setting '" + _settingsManager.TaskLinkRegexSettings.Label + "' doesn't seem to be valid and will therefore be skipped.", GetType());
+                    continue;
+                }
+
+                if (string.IsNullOrWhiteSpace(regex))
+                {
+                    Log.Warn("The RegEx '" + regex + "' from the setting '" + _settingsManager.TaskLinkRegexSettings.Label + "' doesn't seem to be valid and will therefore be skipped.", GetType());
+                    continue;
+                }
+
+                try
+                {
+                    if (Regex.IsMatch(name, (regex.StartsWith('^') ? "" : "^") + regex + (regex.EndsWith('$') ? "" : "$")))
+                    {
+                        return link.Replace("§", name);
+                    }
+                }
+                catch (ArgumentException)
+                {
+                    Log.Warn("The RegEx '" + regex + "' from the setting '" + _settingsManager.TaskLinkRegexSettings.Label + "' doesn't seem to be valid and will therefore be skipped.", GetType());
+                    continue;
+                }
+            }
+
+            return null;
         }
 
         public string ExportToMarkdown(Data? data)
@@ -56,9 +100,14 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
 
                 foreach (var task in day.Value)
                 {
+                    string? link;
+                    string nameOrLink = (link = CheckRegexAndGetLinkForTaskName(task.Name)) != null
+                        ? "[" + task.Name + "](" + link + ")"
+                        : task.Name;
+
                     exportFile.WriteLine(
                         "|" +
-                        task.Name +
+                        nameOrLink +
                         "|" +
                         (task.GetStart()?.ToString("HH:mm") ?? " ") +
                         "|" +
@@ -330,8 +379,13 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
                     case TABLE_ENTRIES_PLACEHOLDER:
                         data?.TrackerEntries[date].ForEach(entry =>
                         {
+                            string? link;
+                            string nameOrLink = (link = CheckRegexAndGetLinkForTaskName(entry.Name)) != null
+                                ? "<a class='link-offset-2 link-offset-3-hover link-underline link-underline-opacity-0 link-underline-opacity-75-hover' href='" + link + "' target='_blank'>" + entry.Name + "</a>"
+                                : entry.Name;
+
                             exportLines += "<tr>";
-                            exportLines += "<td>" + entry.Name + "</td>";
+                            exportLines += "<td>" + nameOrLink + "</td>";
                             exportLines += "<td>" + (entry.GetStart()?.ToString("HH:mm") ?? "") + "</td>";
                             exportLines += "<td>" + (entry.GetEnd()?.ToString("HH:mm") ?? "") + "</td>";
                             exportLines +=
