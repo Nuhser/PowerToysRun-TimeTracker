@@ -149,6 +149,10 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
             const string YEAR_BUTTON_PLACEHOLDER = "%%YEAR-BUTTON-TEMPLATE%%";
             const string YEAR_PLACEHOLDER = "%%YEAR-TEMPLATE%%";
             const string THEME_PLACEHOLDER = "%%THEME%%";
+            const string HEADER_STYLE_PLACEHOLDER = "%%CUSTOM-HEADER-STYLE%%";
+            const string CUSTOM_HEADER_PLACEHOLDER = "%%CUSTOM-HEADER%%";
+            const string FOOTER_STYLE_PLACEHOLDER = "%%CUSTOM-FOOTER-STYLE%%";
+            const string CUSTOM_FOOTER_PLACEHOLDER = "%%CUSTOM-FOOTER%%";
 
             HashSet<string> years = GetYearsFromDateList([.. data?.TrackerEntries.Keys]);
 
@@ -161,6 +165,12 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
             {
                 switch (line.Trim())
                 {
+                    case CUSTOM_HEADER_PLACEHOLDER:
+                        exportLines += _settingsManager.CustomHtmlHeaderSetting.Value;
+                        break;
+                    case CUSTOM_FOOTER_PLACEHOLDER:
+                        exportLines += _settingsManager.CustomHtmlFooterSetting.Value;
+                        break;
                     case YEAR_BUTTON_PLACEHOLDER:
                         years.ToList().ForEach(year => exportLines += FillAndReturnYearButtonTemplate(year, year == years.Last()));
                         break;
@@ -168,7 +178,10 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
                         years.ToList().ForEach(year => exportLines += FillAndReturnYearTemplate(data, year, year == years.Last()));
                         break;
                     default:
-                        exportLines += line.Replace(THEME_PLACEHOLDER, theme);
+                        exportLines += line
+                            .Replace(THEME_PLACEHOLDER, theme)
+                            .Replace(HEADER_STYLE_PLACEHOLDER, string.IsNullOrWhiteSpace(_settingsManager.CustomHtmlHeaderSetting.Value) ? "display: none;" : "")
+                            .Replace(FOOTER_STYLE_PLACEHOLDER, string.IsNullOrWhiteSpace(_settingsManager.CustomHtmlFooterSetting.Value) ? "display: none;" : "");
                         break;
                 }
             }

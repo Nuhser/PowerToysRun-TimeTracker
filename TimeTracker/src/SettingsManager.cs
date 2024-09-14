@@ -86,13 +86,29 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
             Value = false
         };
 
+        public MultilineTextSetting CustomHtmlHeaderSetting = new()
+        {
+            Key = "custom_html_header",
+            Label = "Custom HTML-Summary Header",
+            Description = "Custom HTML code that should be displayed in HTML-sumary exports between the title and the buttons."
+        };
+
+        public MultilineTextSetting CustomHtmlFooterSetting = new()
+        {
+            Key = "custom_html_footer",
+            Label = "Custom HTML-Summary Footer",
+            Description = "Custom HTML code that should be displayed in HTML-sumary exports below the table containing the days."
+        };
+
         public List<Setting> GetSettings()
         {
             return [
+                ShowNotificationsSetting,
+                ShowSavesFileSetting,
                 SummaryExportTypeSetting,
                 ShowRunningDurationsSetting,
-                ShowNotificationsSetting,
-                ShowSavesFileSetting
+                CustomHtmlHeaderSetting,
+                CustomHtmlFooterSetting
             ];
         }
 
