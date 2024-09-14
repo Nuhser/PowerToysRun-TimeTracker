@@ -36,7 +36,7 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
 
             foreach (var day in data?.TrackerEntries ?? [])
             {
-                TimeSpan? totalDuration = data?.GetTotalDurationForDay(day.Key, true);
+                TimeSpan? totalDuration = data?.GetTotalDurationForDay(day.Key, _settingsManager.ShowRunningDurationsSetting.Value);
 
                 exportFile.WriteLine(
                     "## " +
@@ -44,7 +44,7 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
                     ((totalDuration != null)
                         ? (
                             " (Total: " +
-                            ((data?.IsTaskRunningForDate(day.Key) ?? false) ? "~" : "") +
+                            (((data?.IsTaskRunningForDate(day.Key) ?? false) && _settingsManager.ShowRunningDurationsSetting.Value) ? "~" : "") +
                             GetDurationAsString(totalDuration) +
                             ")"
                         )
@@ -64,8 +64,8 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
                         "|" +
                         (task.GetEnd()?.ToString("HH:mm") ?? " ") +
                         "|" +
-                        (task.Running ? "~" : "") +
-                        GetDurationAsString(task.GetDuration(true)) +
+                        (task.Running && _settingsManager.ShowRunningDurationsSetting.Value ? "~" : "") +
+                        GetDurationAsString(task.GetDuration(_settingsManager.ShowRunningDurationsSetting.Value)) +
                         "|"
                     );
 
@@ -79,8 +79,8 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
                                 "|" +
                                 (child.End?.ToString("HH:mm") ?? " ") +
                                 "|" +
-                                (child.Running ? "~" : "") +
-                                GetDurationAsString(child.GetDuration(true)) +
+                                (child.Running && _settingsManager.ShowRunningDurationsSetting.Value ? "~" : "") +
+                                GetDurationAsString(child.GetDuration(_settingsManager.ShowRunningDurationsSetting.Value)) +
                                 "|"
                             );
                         }
@@ -110,8 +110,8 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
                         task.Name,
                         (task.GetStart()?.ToString("HH:mm") ?? ""),
                         (task.GetEnd()?.ToString("HH:mm") ?? ""),
-                        (task.Running ? "~" : "") +
-                        GetDurationAsString(task.GetDuration(true))
+                        (task.Running && _settingsManager.ShowRunningDurationsSetting.Value ? "~" : "") +
+                        GetDurationAsString(task.GetDuration(_settingsManager.ShowRunningDurationsSetting.Value))
                     ]));
 
                     if (task.HasSubEntries())
@@ -123,8 +123,8 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
                             "",
                             (child.Start.ToString("HH:mm") ?? ""),
                             (child.End?.ToString("HH:mm") ?? ""),
-                            (child.Running ? "~" : "") +
-                            GetDurationAsString(child.GetDuration(true))
+                            (child.Running && _settingsManager.ShowRunningDurationsSetting.Value ? "~" : "") +
+                            GetDurationAsString(child.GetDuration(_settingsManager.ShowRunningDurationsSetting.Value))
                             ]));
                         }
                     }
@@ -293,7 +293,7 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
             const string SHOW_PLACEHOLDER = "%%SHOW%%";
             const string COLLAPSED_PLACEHOLDER = "%%COLLAPSED%%";
 
-            TimeSpan? totalDuration = data?.GetTotalDurationForDay(date, true);
+            TimeSpan? totalDuration = data?.GetTotalDurationForDay(date, _settingsManager.ShowRunningDurationsSetting.Value);
 
             using StreamReader dateTemplateFile = new(Path.Combine(_settingsManager.PluginInstallationPath!, @"util", @"html_templates", @"date_template.html"));
 
@@ -309,7 +309,7 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
                         ((totalDuration != null)
                             ? (" (Total: " +
                                 GetDurationAsString(totalDuration) +
-                                ((data?.IsTaskRunningForDate(date) ?? false) ? "<span class='material-symbols-outlined ms-2'>acute</span>" : "") +
+                                (((data?.IsTaskRunningForDate(date) ?? false) && _settingsManager.ShowRunningDurationsSetting.Value) ? "<span class='material-symbols-outlined ms-2'>acute</span>" : "") +
                                 ")")
                             : "") +
                         "\n";
@@ -323,8 +323,8 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
                             exportLines += "<td>" + (entry.GetEnd()?.ToString("HH:mm") ?? "") + "</td>";
                             exportLines +=
                                 "<td>" +
-                                GetDurationAsString(entry.GetDuration(true)) +
-                                (entry.Running ? "<span class='material-symbols-outlined ms-2'>acute</span>" : "") +
+                                GetDurationAsString(entry.GetDuration(_settingsManager.ShowRunningDurationsSetting.Value)) +
+                                (entry.Running && _settingsManager.ShowRunningDurationsSetting.Value ? "<span class='material-symbols-outlined ms-2'>acute</span>" : "") +
                                 "</td>";
                             exportLines += "</tr>";
 
@@ -338,8 +338,8 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
                                     exportLines += "<td>" + (child.End?.ToString("HH:mm") ?? "") + "</td>";
                                     exportLines +=
                                         "<td>" +
-                                        GetDurationAsString(child.GetDuration(true)) +
-                                        (child.Running ? "<span class='material-symbols-outlined ms-2'>acute</span>" : "") +
+                                        GetDurationAsString(child.GetDuration(_settingsManager.ShowRunningDurationsSetting.Value)) +
+                                        (child.Running && _settingsManager.ShowRunningDurationsSetting.Value ? "<span class='material-symbols-outlined ms-2'>acute</span>" : "") +
                                         "</td>";
                                     exportLines += "</tr>";
                                 }

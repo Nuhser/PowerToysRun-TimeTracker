@@ -63,6 +63,13 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
             SelectableOptions = Enum.GetNames(typeof(SummaryExportType))
         };
 
+        public BooleanSetting ShowRunningDurationsSetting = new()
+        {
+            Key = "show_running_durations",
+            Label = "Show Duration for Running Tasks in Summary",
+            Description = "Show/hide current duration for still running tasks in the summaries. Still running tasks will be marked."
+        };
+
         public BooleanSetting ShowNotificationsSetting = new()
         {
             Key = "show_notifications",
@@ -83,6 +90,7 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
         {
             return [
                 SummaryExportTypeSetting,
+                ShowRunningDurationsSetting,
                 ShowNotificationsSetting,
                 ShowSavesFileSetting
             ];
