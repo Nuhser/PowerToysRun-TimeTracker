@@ -16,7 +16,8 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
         public enum PluginVersion
         {
             v1_0_0,
-            v1_0_1
+            v1_0_1,
+            v1_1_0
         }
 
         public class TrackerEntry(string name)
@@ -75,7 +76,7 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
         }
 
         // properties
-        public PluginVersion Version { get; set; } = PluginVersion.v1_0_1;
+        public PluginVersion Version { get; set; } = PluginVersion.v1_1_0;
         public Dictionary<DateOnly, List<TrackerEntry>> TrackerEntries { get; set; } = [];
 
         // utility methods
