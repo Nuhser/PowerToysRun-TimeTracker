@@ -13,11 +13,10 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
         private readonly JsonSerializerOptions JSON_SERIALIZER_OPTIONS = new() { WriteIndented = true };
 
         [JsonConverter(typeof(JsonStringEnumConverter))]
-        public enum PluginVersion
+        public enum DataStructureVersion
         {
-            v1_0_0,
-            v1_0_1,
-            v1_1_0
+            v1,
+            v2
         }
 
         public class TrackerEntry(string name)
@@ -76,7 +75,7 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
         }
 
         // properties
-        public PluginVersion Version { get; set; } = PluginVersion.v1_1_0;
+        public DataStructureVersion Version { get; set; } = DataStructureVersion.v2;
         public Dictionary<DateOnly, List<TrackerEntry>> TrackerEntries { get; set; } = [];
 
         // utility methods
