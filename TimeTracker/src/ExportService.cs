@@ -381,7 +381,7 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
                         {
                             string? link;
                             string nameOrLink = (link = CheckRegexAndGetLinkForTaskName(entry.Name)) != null
-                                ? "<a class='link-offset-2 link-offset-3-hover link-underline link-underline-opacity-0 link-underline-opacity-75-hover' href='" + link + "' target='_blank'>" + entry.Name + "</a>"
+                                ? "<a class='link-offset-2 link-offset-2-hover link-underline link-underline-opacity-0 link-underline-opacity-75-hover' href='" + link + "' target='_blank'>" + entry.Name + "</a>"
                                 : entry.Name;
 
                             exportLines += "<tr>";
