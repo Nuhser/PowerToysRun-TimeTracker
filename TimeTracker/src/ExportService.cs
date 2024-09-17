@@ -29,26 +29,26 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
 
         private string? CheckRegexAndGetLinkForTaskName(string name)
         {
-            if ((_settingsManager.TaskLinkRegexSettings.ValueAsList?.Count % 2) != 0)
+            if ((_settingsManager.TaskLinkRegexSetting.ValueAsList?.Count % 2) != 0)
             {
-                Log.Warn("The number of regex and link lines in setting '" + _settingsManager.TaskLinkRegexSettings.Label + "' doesn't match. This setting's number of lines should always be an even number. The Matching will therefore be skipped.", GetType());
+                Log.Warn("The number of regex and link lines in setting '" + _settingsManager.TaskLinkRegexSetting.Label + "' doesn't match. This setting's number of lines should always be an even number. The Matching will therefore be skipped.", GetType());
                 return null;
             }
 
-            for (int i = 0; i < _settingsManager.TaskLinkRegexSettings.ValueAsList?.Count; i += 2)
+            for (int i = 0; i < _settingsManager.TaskLinkRegexSetting.ValueAsList?.Count; i += 2)
             {
-                string regex = _settingsManager.TaskLinkRegexSettings.ValueAsList?[i]!;
-                string link = _settingsManager.TaskLinkRegexSettings.ValueAsList?[i + 1]!;
+                string regex = _settingsManager.TaskLinkRegexSetting.ValueAsList?[i]!;
+                string link = _settingsManager.TaskLinkRegexSetting.ValueAsList?[i + 1]!;
 
                 if (!Uri.TryCreate(link, UriKind.Absolute, out _))
                 {
-                    Log.Warn("The link '" + link + "' from the setting '" + _settingsManager.TaskLinkRegexSettings.Label + "' doesn't seem to be valid and will therefore be skipped.", GetType());
+                    Log.Warn("The link '" + link + "' from the setting '" + _settingsManager.TaskLinkRegexSetting.Label + "' doesn't seem to be valid and will therefore be skipped.", GetType());
                     continue;
                 }
 
                 if (string.IsNullOrWhiteSpace(regex))
                 {
-                    Log.Warn("The RegEx '" + regex + "' from the setting '" + _settingsManager.TaskLinkRegexSettings.Label + "' doesn't seem to be valid and will therefore be skipped.", GetType());
+                    Log.Warn("The RegEx '" + regex + "' from the setting '" + _settingsManager.TaskLinkRegexSetting.Label + "' doesn't seem to be valid and will therefore be skipped.", GetType());
                     continue;
                 }
 
@@ -61,7 +61,7 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
                 }
                 catch (ArgumentException)
                 {
-                    Log.Warn("The RegEx '" + regex + "' from the setting '" + _settingsManager.TaskLinkRegexSettings.Label + "' doesn't seem to be valid and will therefore be skipped.", GetType());
+                    Log.Warn("The RegEx '" + regex + "' from the setting '" + _settingsManager.TaskLinkRegexSetting.Label + "' doesn't seem to be valid and will therefore be skipped.", GetType());
                     continue;
                 }
             }
