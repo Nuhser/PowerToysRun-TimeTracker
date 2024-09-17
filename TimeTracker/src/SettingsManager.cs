@@ -86,7 +86,14 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
             Value = false
         };
 
-        public MultilineTextSetting TaskLinkRegexSettings = new()
+        public MultilineTextSetting TaskAliasSettings = new()
+        {
+            Key = "task_aliases",
+            Label = "Task Name Aliases",
+            Description = "A list of task names and their possible aliases in the following format: <ALIAS>|<TASK-NAME>"
+        };
+
+        public MultilineTextSetting TaskLinkRegexSetting = new()
         {
             Key = "task_link_regex",
             Label = "Task Name RegEx Matching"
@@ -111,9 +118,10 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
             return [
                 ShowNotificationsSetting,
                 ShowSavesFileSetting,
+                TaskAliasSettings,
                 SummaryExportTypeSetting,
                 ShowRunningDurationsSetting,
-                TaskLinkRegexSettings,
+                TaskLinkRegexSetting,
                 CustomHtmlHeaderSetting,
                 CustomHtmlFooterSetting
             ];
