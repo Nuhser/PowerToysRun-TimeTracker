@@ -3,13 +3,14 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using Community.Powertoys.Run.Plugin.TimeTracker.Platform;
 using ManagedCommon;
 using Microsoft.PowerToys.Settings.UI.Library;
 using Wox.Plugin;
 
-namespace Community.Powertoys.Run.Plugin.TimeTracker
+namespace Community.Powertoys.Run.Plugin.TimeTracker.Settings
 {
-    public class SettingsManager
+    public class SettingsManager : AbstractDataManager<SettingsHolder>
     {
         public static readonly string SETTINGS_DIRECTORY_PATH =
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) +
@@ -45,6 +46,11 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
             {
                 Directory.CreateDirectory(SETTINGS_DIRECTORY_PATH);
             }
+        }
+
+        public override string GetDataFilePath()
+        {
+            return Path.Combine(DATA_BASE_DIRECTORY_PATH, "settings.json");
         }
 
         public enum SummaryExportType

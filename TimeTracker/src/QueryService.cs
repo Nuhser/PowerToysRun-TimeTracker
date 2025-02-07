@@ -1,3 +1,5 @@
+using Community.Powertoys.Run.Plugin.TimeTracker.Data;
+using Community.Powertoys.Run.Plugin.TimeTracker.Settings;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -6,19 +8,17 @@ using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Input;
 using Wox.Plugin;
-using static Community.Powertoys.Run.Plugin.TimeTracker.Utility;
+using static Community.Powertoys.Run.Plugin.TimeTracker.Platform.Utility;
 
 namespace Community.Powertoys.Run.Plugin.TimeTracker
 {
-    public class QueryService(SettingsManager settingsManager, ExportService exportService)
+    public class QueryService(SettingsManager settingsManager, DataManager dataManager, ExportService exportService)
     {
         private const string COPY_GLYPH = "\xE8C8";
 
         private readonly SettingsManager _settingsManager = settingsManager;
+        private readonly DataManager _dataManager = dataManager;
         private readonly ExportService _exportService = exportService;
-
-        private Data? _data = null;
-        private bool _jsonBroken = false;
 
         public List<Result> CheckQueryAndReturnResults(string queryString)
         {
@@ -32,15 +32,15 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
 
         public List<QueryResult> GetQueryResults(string queryString)
         {
-            return _jsonBroken
+            return _dataManager.JsonBroken
                 ? []
                 : [
                     new() {
                         AdditionalChecks = (queryString) =>
                             string.IsNullOrWhiteSpace(queryString) &&
-                            (_data?.IsTaskRunning() ?? false),
+                            _dataManager.IsTaskRunning(),
                         Title = "Stop Currently Running Task",
-                        Description = "Stops the currently running task(s) " + _data?.GetNamesOfRunningTasksAsString() + ".",
+                        Description = "Stops the currently running task(s) " + _dataManager.GetNamesOfRunningTasksAsString() + ".",
                         IconName = "stop.png",
                         Action = (_) => ShowNotificationsForStoppedAndStartedTasks(AddEndTimeToAllRunningTasks(), null)
                     },
@@ -49,20 +49,20 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
                             !string.IsNullOrWhiteSpace(queryString),
                         Title = "Start New Task",
                         Description =
-                            (_data?.IsTaskRunning() ?? false)
-                                ? "Stops the currently running task(s) " + _data?.GetNamesOfRunningTasksAsString() + " and starts a new one named '" + queryString + "'."
+                            _dataManager.IsTaskRunning()
+                                ? "Stops the currently running task(s) " + _dataManager.GetNamesOfRunningTasksAsString() + " and starts a new one named '" + queryString + "'."
                                 : "Starts a new task named '" + queryString + "'.",
                         IconName = "start.png",
                         Action = (queryString) => {
                             List<(string, TimeSpan?)> stoppedTasks = AddEndTimeToAllRunningTasks();
-                            _data?.AddTrackerEntry(queryString);
+                            _dataManager.AddTrackerEntry(queryString);
                             ShowNotificationsForStoppedAndStartedTasks(stoppedTasks, queryString);
                         }
                     },
                     new() {
                         AdditionalChecks = (queryString) =>
                             string.IsNullOrWhiteSpace(queryString) &&
-                            _data?.TrackerEntries.Count > 0,
+                            _dataManager.Data?.TrackerEntries.Count > 0,
                         Title = "Show Time Tracker Summary",
                         IconName = "summary.png",
                         Action = (_) => CreateAndOpenTimeTrackerSummary()
@@ -89,17 +89,12 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
 
         private void ReadTrackerEntriesFromFile()
         {
-            if (Data.FromJson(out _data))
-            {
-                _jsonBroken = false;
-            }
-            else
-            {
-                if (!_jsonBroken)
-                {
-                    _jsonBroken = true;
+            bool jsonBrokenBefore = _dataManager.JsonBroken;
 
-                    if (MessageBoxResult.Yes == MessageBox.Show(
+            _dataManager.Refresh();
+
+            if (!jsonBrokenBefore && _dataManager.JsonBroken) {
+                if (MessageBoxResult.Yes == MessageBox.Show(
                         "The JSON containing your tracker data seems to be broken and needs fixing.\nDo you wan't to fix it now?",
                         "Data-JSON Needs Repair",
                         MessageBoxButton.YesNo,
@@ -109,12 +104,11 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
                         Process.Start(
                             new ProcessStartInfo
                             {
-                                FileName = SettingsManager.DATA_PATH,
+                                FileName = _dataManager.GetDataFilePath(),
                                 UseShellExecute = true
                             }
                         );
                     }
-                }
             }
         }
 
@@ -122,9 +116,9 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
         {
             List<(string, TimeSpan?)> stoppedTasks = [];
 
-            if (_data != null)
+            if (_dataManager.Data != null)
             {
-                foreach (var entryList in _data.TrackerEntries.Values)
+                foreach (var entryList in _dataManager.Data.TrackerEntries.Values)
                 {
                     entryList.ForEach(entry =>
                     {
@@ -139,7 +133,7 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
                     });
                 }
 
-                _data.ToJson();
+                _dataManager.Save();
             }
 
             return stoppedTasks;
@@ -214,13 +208,13 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
             switch (_settingsManager.SummaryExportTypeSetting.SelectedOption)
             {
                 case (int)SettingsManager.SummaryExportType.CSV:
-                    exportFile = _exportService.ExportToCSV(_data);
+                    exportFile = _exportService.ExportToCSV();
                     break;
                 case (int)SettingsManager.SummaryExportType.Markdown:
-                    exportFile = _exportService.ExportToMarkdown(_data);
+                    exportFile = _exportService.ExportToMarkdown();
                     break;
                 case (int)SettingsManager.SummaryExportType.HTML:
-                    exportFile = _exportService.ExportToHTML(_data, _settingsManager.HtmlExportTheme!);
+                    exportFile = _exportService.ExportToHTML();
                     break;
             }
 

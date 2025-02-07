@@ -1,4 +1,6 @@
-﻿using ManagedCommon;
+﻿using Community.Powertoys.Run.Plugin.TimeTracker.Data;
+using Community.Powertoys.Run.Plugin.TimeTracker.Settings;
+using ManagedCommon;
 using Microsoft.PowerToys.Settings.UI.Library;
 using System;
 using System.Collections.Generic;
@@ -11,6 +13,7 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
     {
         private PluginInitContext? _context;
         private readonly SettingsManager _settingsManager;
+        private readonly DataManager _dataManager;
         private readonly QueryService _queryService;
         private readonly ExportService _exportService;
 
@@ -23,8 +26,9 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
         public TimeTracker()
         {
             _settingsManager = new SettingsManager();
-            _exportService = new ExportService(_settingsManager);
-            _queryService = new QueryService(_settingsManager, _exportService);
+            _dataManager = new DataManager();
+            _exportService = new ExportService(_settingsManager, _dataManager);
+            _queryService = new QueryService(_settingsManager, _dataManager, _exportService);
         }
 
         public Control CreateSettingPanel()

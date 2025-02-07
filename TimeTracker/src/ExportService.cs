@@ -1,16 +1,19 @@
+using Community.Powertoys.Run.Plugin.TimeTracker.Data;
+using Community.Powertoys.Run.Plugin.TimeTracker.Settings;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using Wox.Plugin.Logger;
-using static Community.Powertoys.Run.Plugin.TimeTracker.Utility;
+using static Community.Powertoys.Run.Plugin.TimeTracker.Platform.Utility;
 
 namespace Community.Powertoys.Run.Plugin.TimeTracker
 {
-    public class ExportService(SettingsManager settingsManager)
+    public class ExportService(SettingsManager settingsManager, DataManager dataManager)
     {
         private readonly SettingsManager _settingsManager = settingsManager;
+        private readonly DataManager _dataManager = dataManager;
 
         private static HashSet<string> GetYearsFromDateList(List<DateOnly> dates)
         {
@@ -69,7 +72,7 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
             return null;
         }
 
-        public string ExportToMarkdown(Data? data)
+        public string ExportToMarkdown()
         {
             string exportFileName = Path.Combine(_settingsManager.PluginInstallationPath!, @"summary.md");
 
@@ -78,9 +81,9 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
             exportFile.WriteLine("# Time Tracker Summary");
             exportFile.WriteLine();
 
-            foreach (var day in data?.TrackerEntries ?? [])
+            foreach (var day in _dataManager.Data?.TrackerEntries ?? [])
             {
-                TimeSpan? totalDuration = data?.GetTotalDurationForDay(day.Key, _settingsManager.ShowRunningDurationsSetting.Value);
+                TimeSpan? totalDuration = _dataManager.GetTotalDurationForDay(day.Key, _settingsManager.ShowRunningDurationsSetting.Value);
 
                 exportFile.WriteLine(
                     "## " +
@@ -88,7 +91,7 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
                     ((totalDuration != null)
                         ? (
                             " (Total: " +
-                            (((data?.IsTaskRunningForDate(day.Key) ?? false) && _settingsManager.ShowRunningDurationsSetting.Value) ? "~" : "") +
+                            ((_dataManager.IsTaskRunningForDate(day.Key) && _settingsManager.ShowRunningDurationsSetting.Value) ? "~" : "") +
                             GetDurationAsString(totalDuration) +
                             ")"
                         )
@@ -142,7 +145,7 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
             return exportFileName;
         }
 
-        public string ExportToCSV(Data? data)
+        public string ExportToCSV()
         {
             string exportFileName = Path.Combine(_settingsManager.PluginInstallationPath!, @"summary.csv");
 
@@ -150,7 +153,7 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
 
             exportFile.WriteLine("Date,Name,Start,End,Duration");
 
-            foreach (var day in data?.TrackerEntries ?? [])
+            foreach (var day in _dataManager.Data?.TrackerEntries ?? [])
             {
                 foreach (var task in day.Value)
                 {
@@ -183,17 +186,18 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
             return exportFileName;
         }
 
-        public string ExportToHTML(Data? data, string theme)
+        public string ExportToHTML()
         {
+            string theme = _settingsManager.HtmlExportTheme!;
             string exportFileName = Path.Combine(_settingsManager.PluginInstallationPath!, @"summary.html");
             using StreamWriter exportFile = new(exportFileName);
 
-            exportFile.WriteLine(FillAndReturnSummaryTemplate(data, theme));
+            exportFile.WriteLine(FillAndReturnSummaryTemplate(_dataManager.Data, theme));
 
             return exportFileName;
         }
 
-        private string FillAndReturnSummaryTemplate(Data? data, string theme)
+        private string FillAndReturnSummaryTemplate(DataHolder? data, string theme)
         {
             const string YEAR_BUTTON_PLACEHOLDER = "%%YEAR-BUTTON-TEMPLATE%%";
             const string YEAR_PLACEHOLDER = "%%YEAR-TEMPLATE%%";
@@ -260,7 +264,7 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
             return exportLines;
         }
 
-        private string FillAndReturnYearTemplate(Data? data, string year, bool active)
+        private string FillAndReturnYearTemplate(DataHolder? data, string year, bool active)
         {
             const string YEAR_ID_PLACEHOLDER = "%%YEAR-ID%%";
             const string MONTH_BUTTON_PLACEHOLDER = "%%MONTH-BUTTON-TEMPLATE%%";
@@ -318,7 +322,7 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
             return exportLines;
         }
 
-        private string FillAndReturnMonthTemplate(Data? data, string month, string year, bool active)
+        private string FillAndReturnMonthTemplate(DataHolder? data, string month, string year, bool active)
         {
             const string YEAR_MONTH_ID_PLACEHOLDER = "%%YEAR-MONTH-ID%%";
             const string DATE_PLACEHOLDER = "%%DATE-TEMPLATE%%";
@@ -347,7 +351,7 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
             return exportLines;
         }
 
-        private string FillAndReturnDateTemplate(DateOnly date, Data? data, bool active)
+        private string FillAndReturnDateTemplate(DateOnly date, DataHolder? data, bool active)
         {
             const string DATE_ID_PLACEHOLDER = "%%DATE-ID%%";
             const string DATE_NAME_PLACEHOLDER = "%%DATE-NAME%%";
@@ -355,7 +359,7 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
             const string SHOW_PLACEHOLDER = "%%SHOW%%";
             const string COLLAPSED_PLACEHOLDER = "%%COLLAPSED%%";
 
-            TimeSpan? totalDuration = data?.GetTotalDurationForDay(date, _settingsManager.ShowRunningDurationsSetting.Value);
+            TimeSpan? totalDuration = _dataManager.GetTotalDurationForDay(date, _settingsManager.ShowRunningDurationsSetting.Value);
 
             using StreamReader dateTemplateFile = new(Path.Combine(_settingsManager.PluginInstallationPath!, @"util", @"html_templates", @"date_template.html"));
 
@@ -371,7 +375,7 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
                         ((totalDuration != null)
                             ? (" (Total: " +
                                 GetDurationAsString(totalDuration) +
-                                (((data?.IsTaskRunningForDate(date) ?? false) && _settingsManager.ShowRunningDurationsSetting.Value) ? "<span class='material-symbols-outlined ms-2'>acute</span>" : "") +
+                                ((_dataManager.IsTaskRunningForDate(date) && _settingsManager.ShowRunningDurationsSetting.Value) ? "<span class='material-symbols-outlined ms-2'>acute</span>" : "") +
                                 ")")
                             : "") +
                         "\n";

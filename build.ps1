@@ -27,7 +27,7 @@ if ($?) {
 
         [xml]$project_xml = Get-Content -Path ".\TimeTracker\TimeTracker.csproj"
         $project_xml.Project.PropertyGroup.Version = $Version
-        $project_xml.Save(".\TimeTracker\TimeTracker.csproj")
+        $project_xml.Save(".\PowerToys Run Plugins\TimeTracker\TimeTracker\TimeTracker.csproj")
 
         Write-Host "Updated verion number in project-file.`n"
     }

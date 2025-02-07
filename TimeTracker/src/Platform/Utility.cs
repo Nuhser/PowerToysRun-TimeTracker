@@ -1,6 +1,6 @@
 using System;
 
-namespace Community.Powertoys.Run.Plugin.TimeTracker
+namespace Community.Powertoys.Run.Plugin.TimeTracker.Platform
 {
     public static class Utility
     {
