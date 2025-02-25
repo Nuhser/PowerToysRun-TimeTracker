@@ -60,22 +60,6 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker.Settings
             HTML
         }
 
-        public DropdownSetting SummaryExportTypeSetting = new()
-        {
-            Key = "summary_export_type",
-            Label = "Summary Export Type",
-            Description = "The file type to use when creating a time tracker summary.",
-            SelectedOption = (int)SummaryExportType.HTML,
-            SelectableOptions = Enum.GetNames(typeof(SummaryExportType))
-        };
-
-        public BooleanSetting ShowRunningDurationsSetting = new()
-        {
-            Key = "show_running_durations",
-            Label = "Show Duration for Running Tasks in Summary",
-            Description = "Show/hide current duration for still running tasks in the summaries. Still running tasks will be marked."
-        };
-
         public BooleanSetting ShowNotificationsSetting = new()
         {
             Key = "show_notifications",
@@ -92,11 +76,28 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker.Settings
             Value = false
         };
 
-        public MultilineTextSetting TaskAliasSettings = new()
+        public BooleanSetting CaseInsensitiveTaskNameMatching = new()
         {
-            Key = "task_aliases",
-            Label = "Task Name Aliases",
-            Description = "A list of task names and their possible aliases in the following format: <ALIAS>|<TASK-NAME>"
+            Key = "case_insensitive_task_name_matching",
+            Label = "Match Task Names Case Insensitive",
+            Description = "Ignore upper and lower case in the tasks' names when comparing them during creation of a new tracker entry.",
+            Value = false
+        };
+
+        public DropdownSetting SummaryExportTypeSetting = new()
+        {
+            Key = "summary_export_type",
+            Label = "Summary Export Type",
+            Description = "The file type to use when creating a time tracker summary.",
+            SelectedOption = (int)SummaryExportType.HTML,
+            SelectableOptions = Enum.GetNames(typeof(SummaryExportType))
+        };
+
+        public BooleanSetting ShowRunningDurationsSetting = new()
+        {
+            Key = "show_running_durations",
+            Label = "Show Duration for Running Tasks in Summary",
+            Description = "Show/hide current duration for still running tasks in the summaries. Still running tasks will be marked."
         };
 
         public MultilineTextSetting TaskLinkRegexSetting = new()
@@ -124,7 +125,7 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker.Settings
             return [
                 ShowNotificationsSetting,
                 ShowSavesFileSetting,
-                TaskAliasSettings,
+                CaseInsensitiveTaskNameMatching,
                 SummaryExportTypeSetting,
                 ShowRunningDurationsSetting,
                 TaskLinkRegexSetting,

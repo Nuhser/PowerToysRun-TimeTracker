@@ -3,11 +3,14 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Community.Powertoys.Run.Plugin.TimeTracker.Platform;
+using Community.Powertoys.Run.Plugin.TimeTracker.Settings;
 
 namespace Community.Powertoys.Run.Plugin.TimeTracker.Data;
 
-public class DataManager : AbstractDataManager<DataHolder>
+public class DataManager(SettingsManager settingsManager) : AbstractDataManager<DataHolder>
 {
+    private readonly SettingsManager _settingsManager = settingsManager;
+
     public override string GetDataFilePath()
     {
         return Path.Combine(DATA_BASE_DIRECTORY_PATH, "data.json");

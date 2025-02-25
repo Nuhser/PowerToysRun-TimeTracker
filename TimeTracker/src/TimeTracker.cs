@@ -26,7 +26,7 @@ namespace Community.Powertoys.Run.Plugin.TimeTracker
         public TimeTracker()
         {
             _settingsManager = new SettingsManager();
-            _dataManager = new DataManager();
+            _dataManager = new DataManager(_settingsManager);
             _exportService = new ExportService(_settingsManager, _dataManager);
             _queryService = new QueryService(_settingsManager, _dataManager, _exportService);
         }
